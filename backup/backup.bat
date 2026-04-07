@@ -6,78 +6,101 @@ echo    BookStack Backup Script
 echo ==================================
 echo.
 
-:: Configuration - adjusted for running from backup\ directory
-set BACKUP_BASE_DIR=..\backups
-set MAX_BACKUPS=3
+:: =========================
+:: CONFIG (MATCHING YOUR SYSTEM)
+:: =========================
+set "BACKUP_BASE_DIR=backups"
+set "MAX_BACKUPS=3"
 
-:: Generate timestamp
-for /f "tokens=2 delims==" %%I in ('wmic os get localdatetime /format:list') do set datetime=%%I
-set DATE=%datetime:~0,8%_%datetime:~8,6%
+set "DB_CONTAINER=mariadb"
+set "DB_NAME=bookstackapp"
+set "DB_USER=root"
+set "DB_PASS=rootpass"
 
-set BACKUP_DIR=%BACKUP_BASE_DIR%\%DATE%
+set "IMAGES_PATH=storage\images"
 
-:: Create backup directory
+:: =========================
+:: TIMESTAMP
+:: =========================
+for /f %%i in ('powershell -NoProfile -Command "Get-Date -Format yyyyMMdd_HHmmss"') do set "DATE=%%i"
+
+set "BACKUP_DIR=%BACKUP_BASE_DIR%\%DATE%"
+
+:: =========================
+:: CREATE FOLDERS
+:: =========================
 if not exist "%BACKUP_BASE_DIR%" mkdir "%BACKUP_BASE_DIR%"
-if not exist "%BACKUP_DIR%" mkdir "%BACKUP_DIR%"
+mkdir "%BACKUP_DIR%"
 
-echo [1/4] Dumping database...
-docker exec mariadb mysqldump -uroot -psecretrootpass bookstackapp > "%BACKUP_DIR%\bookstack.sql"
+echo [1/4] Checking Docker container...
 
-if %errorlevel% equ 0 (
-    echo [OK] Database backup complete
-) else (
-    echo [ERROR] Database backup failed
+docker ps | findstr "%DB_CONTAINER%" >nul
+if errorlevel 1 (
+    echo [ERROR] MariaDB container not found: %DB_CONTAINER%
+    echo Run: docker ps
     pause
     exit /b 1
 )
 
+echo [OK] Container found
 echo.
-echo [2/4] Backing up images...
-if exist "..\storage\images\" (
-    xcopy /E /I /Y /Q "..\storage\images" "%BACKUP_DIR%\images" >nul
+
+echo [2/4] Dumping database (bookstackapp)...
+
+docker exec -i %DB_CONTAINER% mysqldump --protocol=TCP -u%DB_USER% -p%DB_PASS% %DB_NAME% > "%BACKUP_DIR%\bookstack.sql"
+
+if errorlevel 1 (
+    echo [ERROR] Database backup failed
+    echo.
+    echo CHECK:
+    echo - DB name: %DB_NAME%
+    echo - Container: %DB_CONTAINER%
+    echo - Password: %DB_PASS%
+    pause
+    exit /b 1
+)
+
+echo [OK] Database backup complete
+echo.
+
+echo [3/4] Backing up images...
+
+if exist "%IMAGES_PATH%\" (
+    xcopy "%IMAGES_PATH%\*" "%BACKUP_DIR%\images\" /E /I /Y /Q >nul
     echo [OK] Images backed up
 ) else (
-    echo [WARNING] No images directory found, skipping
+    echo [WARNING] No images folder found at %IMAGES_PATH%
 )
 
 echo.
-echo [3/4] Compressing backup...
-tar -czf "%BACKUP_BASE_DIR%\%DATE%.tar.gz" -C "%BACKUP_BASE_DIR%" "%DATE%"
+
+echo [4/4] Compressing backup...
+
+powershell -NoProfile -Command ^
+"Compress-Archive -Path '%BACKUP_DIR%' -DestinationPath '%BACKUP_BASE_DIR%\%DATE%.zip' -Force"
+
 rmdir /S /Q "%BACKUP_DIR%"
-echo [OK] Backup compressed: %BACKUP_BASE_DIR%\%DATE%.tar.gz
 
+echo [OK] Backup created: %DATE%.zip
 echo.
-echo [4/4] Cleaning old backups (keeping latest %MAX_BACKUPS%)...
 
-:: Count backups
-set /a BACKUP_COUNT=0
-for %%F in ("%BACKUP_BASE_DIR%\*.tar.gz") do set /a BACKUP_COUNT+=1
+echo [5/5] Cleaning old backups...
 
-if !BACKUP_COUNT! GTR %MAX_BACKUPS% (
-    :: Get list of backups sorted by date (oldest first)
-    set /a TO_DELETE=!BACKUP_COUNT! - %MAX_BACKUPS%
-    set /a DELETED=0
-    
-    for /f "delims=" %%F in ('dir /B /O:D "%BACKUP_BASE_DIR%\*.tar.gz"') do (
-        if !DELETED! LSS !TO_DELETE! (
-            del "%BACKUP_BASE_DIR%\%%F"
-            set /a DELETED+=1
-        )
+set /a COUNT=0
+
+for /f "delims=" %%F in ('dir /b /o-d "%BACKUP_BASE_DIR%\*.zip"') do (
+    set /a COUNT+=1
+    if !COUNT! GTR %MAX_BACKUPS% (
+        del "%BACKUP_BASE_DIR%\%%F"
+        echo Deleted old backup: %%F
     )
-    echo [OK] Removed !DELETED! old backup(s)
-) else (
-    echo [OK] No cleanup needed (total backups: !BACKUP_COUNT!)
 )
 
 echo.
 echo ==================================
-echo Backup complete!
-echo Location: %BACKUP_BASE_DIR%\%DATE%.tar.gz
-echo.
-:: Count final backups
-set /a FINAL_COUNT=0
-for %%F in ("%BACKUP_BASE_DIR%\*.tar.gz") do set /a FINAL_COUNT+=1
-echo Total backups: !FINAL_COUNT!
+echo BACKUP COMPLETE
+echo Location: %BACKUP_BASE_DIR%
+echo Database: %DB_NAME%
 echo ==================================
 echo.
 
