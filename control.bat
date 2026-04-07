@@ -87,7 +87,7 @@ goto menu
 
 :update
 call update.bat
-goto menu
+call control.bat
 
 :restart
 echo ================================
