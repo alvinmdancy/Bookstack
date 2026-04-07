@@ -55,7 +55,6 @@ bookstack_config/views/
 # optional backups
 *.bak
 # Backups - do not commit
-backups/
 *.tar.gz
 
 # Restore temp directory
