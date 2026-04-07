@@ -21,6 +21,28 @@ set DB_ROOT_PASS=rootpass
 set MAX_RETRIES=20
 
 :: =========================
+:: INIT VERSION FILE
+:: =========================
+echo.
+
+if not exist VERSION (
+    echo Creating VERSION file...
+    
+    :: Try to derive version from git tag
+    for /f %%i in ('git describe --tags --abbrev=0 2^>nul') do (
+        echo %%i > VERSION
+        goto version_done
+    )
+
+    :: fallback if git not available
+    echo v1.0.0 > VERSION
+)
+
+:version_done
+
+echo OK Version initialized
+echo.
+:: =========================
 :: PHASE 1 - DOCKER CHECK
 :: =========================
 echo [1/7] Checking Docker...

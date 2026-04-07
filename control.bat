@@ -1,26 +1,20 @@
 @echo off
 cd /d %~dp0
 
-set LOCAL_TAG=
+set LOCAL_TAG=unknown
 set LATEST_TAG=
 set UPDATE_AVAILABLE=0
 
-:: get local tag
-for /f %%i in ('git tag --points-at HEAD') do (
-    set LOCAL_TAG=%%i
-    goto :local_done
+:: =========================
+:: Read LOCAL version (SOURCE OF TRUTH)
+:: =========================
+if exist VERSION (
+    set /p LOCAL_TAG=<VERSION
 )
 
-for /f %%i in ('git describe --tags --abbrev=0 2^>nul') do (
-    set LOCAL_TAG=%%i
-    goto :local_done
-)
-
-set LOCAL_TAG=unknown
-
-:local_done
-
-:: fetch latest tags
+:: =========================
+:: Fetch latest tags
+:: =========================
 git fetch --tags origin >nul 2>&1
 
 for /f %%i in ('git tag --sort=-v:refname') do (
@@ -30,11 +24,12 @@ for /f %%i in ('git tag --sort=-v:refname') do (
 
 :latest_done
 
-:: compare
+:: =========================
+:: Compare versions
+:: =========================
 if not "%LOCAL_TAG%"=="%LATEST_TAG%" (
     set UPDATE_AVAILABLE=1
 )
-
 :menu
 cls
 echo ================================
@@ -92,6 +87,13 @@ goto menu
 
 :update
 call update.bat
+:: reload version after update
+if exist VERSION (
+    set /p LOCAL_TAG=<VERSION
+)
+
+set UPDATE_AVAILABLE=0
+
 goto menu
 
 :restart
