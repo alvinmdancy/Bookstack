@@ -1,5 +1,6 @@
 @echo off
 setlocal enabledelayedexpansion
+cd /d %~dp0
 
 echo ==================================
 echo   BookStack Installer
@@ -29,13 +30,15 @@ if not exist VERSION (
     echo Creating VERSION file...
     
     :: Try to derive version from git tag
+    :: FIX: Removed the space before the redirection operator '>'
     for /f %%i in ('git describe --tags --abbrev=0 2^>nul') do (
-        <nul set /p "=%%i" > VERSION
+        <nul set /p "=%%i">VERSION
         goto version_done
     )
 
     :: fallback if git not available
-    <nul set /p "=v1.0.0" > VERSION
+    :: FIX: Removed the space before the redirection operator '>'
+    <nul set /p "=v1.0.0">VERSION
 )
 
 :version_done
@@ -194,3 +197,4 @@ echo Access: http://localhost:8085
 echo.
 call control.bat
 pause
+exit /b 0

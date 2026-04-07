@@ -4,17 +4,28 @@ cd /d %~dp0
 
 :menu
 cls
-set LOCAL_TAG=unknown
-set LATEST_TAG=unknown
-set UPDATE_AVAILABLE=0
+set "LOCAL_TAG=unknown"
+set "LATEST_TAG=unknown"
+set "UPDATE_AVAILABLE=0"
 
 :: =========================
 :: Read LOCAL version (SOURCE OF TRUTH)
 :: =========================
 if exist VERSION (
-    set /p LOCAL_TAG=<VERSION
-    :: Trim whitespace
-    for /f "tokens=* delims= " %%a in ("!LOCAL_TAG!") do set LOCAL_TAG=%%a
+    rem Read the raw content of the VERSION file
+    set /p "LOCAL_TAG_RAW="<VERSION
+
+    rem --- Robustly trim leading and trailing whitespace ---
+    rem 1. Trim leading whitespace
+    for /f "tokens=* delims= " %%a in ("!LOCAL_TAG_RAW!") do set "LOCAL_TAG=%%a"
+
+    rem 2. Trim trailing whitespace recursively
+    :trim_trailing
+    if "!LOCAL_TAG:~-1!"==" " ( 
+        set "LOCAL_TAG=!LOCAL_TAG:~0,-1!"
+        goto :trim_trailing
+    )
+    
 ) else (
     echo WARNING: VERSION file not found
 )
@@ -25,26 +36,21 @@ if exist VERSION (
 git fetch --tags origin >nul 2>&1
 
 :: Get the latest tag
-for /f "delims=" %%i in ('git tag --sort^=-v:refname 2^>nul') do (
-    set LATEST_TAG=%%i
+for /f "delims=" %%i in (
+    'git tag --sort^=-v:refname 2^>nul'
+) do (
+    set "LATEST_TAG=%%i"
     goto :latest_done
 )
 
 :latest_done
 
-:: Trim whitespace from LATEST_TAG
-for /f "tokens=* delims= " %%a in ("!LATEST_TAG!") do set LATEST_TAG=%%a
+rem Trim whitespace from LATEST_TAG
+for /f "tokens=* delims= " %%a in ("!LATEST_TAG!") do set "LATEST_TAG=%%a"
 
 :: =========================
 :: Compare versions
 :: =========================
-if not "!LOCAL_TAG!"=="unknown" (
-    if not "!LATEST_TAG!"=="unknown" (
-        if not "!LOCAL_TAG!"=="!LATEST_TAG!" (
-            set UPDATE_AVAILABLE=1
-        )
-    )
-)
 
 echo ================================
 echo     BookStack Control Panel
@@ -52,11 +58,19 @@ echo ================================
 echo.
 echo Go to http://localhost:8085 in your browser to access BookStack
 echo.
-echo Current Version : !LOCAL_TAG!
-echo Latest Version  : !LATEST_TAG!
 
-:: DEBUG: Uncomment to see exact comparison
-:: echo DEBUG: Comparing [!LOCAL_TAG!] with [!LATEST_TAG!]
+:: Debugging output for clarity
+echo Current Version (Raw from file ) : "!LOCAL_TAG_RAW!"
+echo Current Version (Cleaned)     : "!LOCAL_TAG!"
+echo Latest Version                : "!LATEST_TAG!"
+
+if not "!LOCAL_TAG!"=="unknown" (
+    if not "!LATEST_TAG!"=="unknown" (
+        if not "!LOCAL_TAG!"=="!LATEST_TAG!" (
+            set "UPDATE_AVAILABLE=1"
+        )
+    )
+)
 
 if "!UPDATE_AVAILABLE!"=="1" (
     echo.
