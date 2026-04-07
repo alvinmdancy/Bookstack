@@ -56,7 +56,7 @@ Then open: `http://localhost:8085`
 
 ```bash
 git clone https://github.com/alvinmdancy/Bookstack.git
-cd Bookstack/bookstack-git
+cd Bookstack
 chmod +x install.sh
 ./install.sh
 ```
