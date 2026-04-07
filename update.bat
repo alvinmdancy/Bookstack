@@ -79,7 +79,7 @@ echo [%date% %time%] UPDATE %LOCAL_TAG% to %LATEST_TAG% >> %LOG_FILE%
 set BACKUP_TAG=backup-%LOCAL_TAG%-%RANDOM%
 
 git tag %BACKUP_TAG% >nul 2>&1
-echo Backup snapshot: %BACKUP_TAG%
+:: echo Backup snapshot: %BACKUP_TAG%
 
 :: =========================
 :: 6. Stop Docker safely
@@ -136,6 +136,7 @@ echo UPDATE SUCCESSFUL
 echo Now running version: %LATEST_TAG%
 echo ========================================
 pause
+call control.bat
 exit /b 0
 
 :: =========================

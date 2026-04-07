@@ -1,28 +1,34 @@
-Portable BookStack Distribution
+# Portable BookStack Distribution
 
-A fully containerized BookStack instance with database snapshots and image assets tracked in Git. Clone once, run anywhere.
+A fully containerized and portable BookStack deployment with automated installation, database snapshots, and optional versioned assets. Designed to be clone-and-run anywhere with minimal setup.
+
+---
 
 ## Features
 
-- **One-command installation** - Automated setup script
-- **Docker-based** - No local PHP/MySQL installation needed
-- **Database snapshots** - Pre-configured with sample data
-- **Git-tracked images** - All uploaded images version-controlled
-- **Portable** - Clone to any machine and run immediately
-- **Isolated networking** - Containers communicate on private network
-- **Automated backups** - Keep latest 3 backups with one command
+- One-command installation (Windows + Linux support)
+- Fully Docker-based (no PHP/MySQL installation required)
+- Preloaded database snapshot support
+- Image asset persistence (Git-tracked optional assets)
+- Portable deployment (clone → install → run)
+- Isolated Docker networking between services
+- Automated backup system (keeps latest 3 backups)
+- Easy restore system with interactive selection
+- Version-controlled deployment system (VERSION file + Git tags)
 
 ---
 
 ## Prerequisites
 
 ### Windows
-- [Docker Desktop](https://www.docker.com/products/docker-desktop/) (with WSL2 enabled)
-- [Git for Windows](https://git-scm.com/download/win)
+
+- Docker Desktop (WSL2 enabled)
+- Git for Windows
 - Windows 10/11
 
-### Linux/Mac
-- Docker & Docker Compose
+### Linux / macOS
+
+- Docker + Docker Compose
 - Git
 
 ---
@@ -31,283 +37,263 @@ A fully containerized BookStack instance with database snapshots and image asset
 
 ### Windows
 
-1. **Clone the repository**
-```cmd
-   git clone https://github.com/alvinmdancy/bookstack-git.git
-   cd bookstack-git
-```
-
-2. **Run the installer**
-```cmd
-   install.bat
-```
-
-3. **Access BookStack**
-   
-   Open your browser: **http://localhost:8085**
-   
-   Default credentials:
-   - **Email:** `admin@admin.com`
-   - **Password:** `password`
-
-### Linux/Mac
-
-1. **Clone the repository**
 ```bash
-   git clone https://github.com/alvinmdancy/bookstack-git.git
-   cd bookstack-git
+git clone https://github.com/alvinmdancy/Bookstack.git
+cd Bookstack
+install.bat
 ```
 
-2. **Make installer executable and run**
+Then open: `http://localhost:8085`
+
+**Default Login**
+
+| Field    | Value           |
+|----------|-----------------|
+| Email    | admin@admin.com |
+| Password | password        |
+
+### Linux / macOS
+
 ```bash
-   chmod +x install.sh
-   ./install.sh
-```
-   
-   Or manually:
-```bash
-   docker compose up -d
-   docker exec -i mariadb mysql -uroot -psecretsrootpass bookstackapp < db/bookstack.sql
+git clone https://github.com/alvinmdancy/Bookstack.git
+cd Bookstack
+chmod +x install.sh
+./install.sh
 ```
 
-3. **Access BookStack**
-   
-   Open your browser: **http://localhost:8085**
+Or manual start:
 
----
-
-## Project Structure
-bookstack-git/
-├── backup/
-│   ├── backup.sh           # Linux backup script
-│   ├── backup.bat          # Windows backup script
-│   └── README.md           # Backup documentation
-├── restore/
-│   ├── restore.sh          # Linux restore script
-│   ├── restore.bat         # Windows restore script
-│   └── README.md           # Restore documentation
-├── backups/                # Generated backups (gitignored)
-├── docker-compose.yml      # Container orchestration
-├── install.bat             # Windows installer
-├── db/
-│   └── bookstack.sql       # Database snapshot
-├── storage/
-│   └── images/             # Git-tracked uploaded images
-└── README.md
-
----
-
-## Common Commands
-
-### Start containers
 ```bash
 docker compose up -d
-```
-
-### Stop containers
-```bash
-docker compose down
-```
-
-### View logs
-```bash
-docker compose logs -f bookstack
-docker compose logs -f mariadb
-```
-
-### Restart BookStack
-```bash
-docker compose restart bookstack
-```
-
-### Access MariaDB shell
-```bash
-docker exec -it mariadb mysql -u bookstack -pbookstackpass bookstackapp
-```
-
-### Backup database manually
-```bash
-docker exec mariadb mysqldump -uroot -psecretsrootpass bookstackapp > db/bookstack_backup_$(date +%Y%m%d).sql
-```
-
-### Restore database manually
-```bash
 docker exec -i mariadb mysql -uroot -psecretsrootpass bookstackapp < db/bookstack.sql
 ```
 
 ---
 
-## Backup and Restore
+## Project Structure
 
-### Create a backup
+```
+Bookstack/
+└── bookstack-git/
+    ├── assets/
+    │   └── bookstack.ico
+    ├── backup/
+    │   ├── backup.bat
+    │   ├── backup.sh
+    │   └── README.md
+    ├── backups/                    # Runtime backups (gitignored)
+    │   └── YYYYMMDD_HHMMSS.tar.gz
+    ├── bookstack_config/           # BookStack app config (runtime)
+    │   ├── keys/
+    │   ├── log/
+    │   ├── nginx/
+    │   ├── php/
+    │   └── www/
+    ├── bookstack_data/
+    │   └── uploads/
+    ├── db/
+    │   └── bookstack.sql           # Database snapshot
+    ├── mariadb_data/               # MariaDB data directory (runtime)
+    ├── restore/
+    │   ├── restore.bat
+    │   ├── restore.sh
+    │   └── README.md
+    ├── storage/
+    │   ├── files/
+    │   ├── framework/
+    │   ├── images/
+    │   ├── themes/
+    │   └── uploads/
+    ├── control.bat
+    ├── docker-compose.yml
+    ├── install.bat
+    ├── update.bat
+    └── README.md
+```
 
-**Linux/Mac:**
+---
+
+## Common Commands
+
+**Start services**
+```bash
+docker compose up -d
+```
+
+**Stop services**
+```bash
+docker compose down
+```
+
+**View logs**
+```bash
+docker compose logs -f bookstack
+docker compose logs -f mariadb
+```
+
+**Restart BookStack**
+```bash
+docker compose restart bookstack
+```
+
+---
+
+## Backup System
+
+### Create a Backup
+
+**Windows**
+```bash
+cd backup
+backup.bat
+```
+
+**Linux / macOS**
 ```bash
 cd backup
 ./backup.sh
 ```
 
-**Windows:**
-```cmd
-cd backup
-backup.bat
+**Backup includes:**
+- Database backup
+- Image backup
+- Compressed archive output
+- Automatically keeps the last 3 backups
+
+---
+
+## Restore System
+
+### Restore a Backup
+
+**Windows**
+```bash
+cd restore
+restore.bat
 ```
 
-Features:
-- Backs up database and images
-- Compresses to .tar.gz format
-- Automatically keeps only the 3 most recent backups
-- Backups saved to `backups/` directory
-
-### Restore from backup
-
-**Linux/Mac:**
+**Linux / macOS**
 ```bash
 cd restore
 ./restore.sh
 ```
 
-**Windows:**
-```cmd
-cd restore
-restore.bat
-```
-
-Features:
-- Lists all available backups
-- Interactive selection (1 = most recent)
-- Confirms before overwriting data
-- Restores database and images
-
-See `backup/README.md` and `restore/README.md` for detailed documentation.
-
----
-
-## Troubleshooting
-
-### Images not showing
-```bash
-# Check if images directory is mounted correctly
-docker exec -it bookstack ls -la /config/www/uploads/images
-
-# Fix permissions if needed
-docker exec -it bookstack chown -R abc:abc /config/www/uploads/images
-```
-
-### Database connection errors
-```bash
-# Check if MariaDB is healthy
-docker compose ps
-
-# View MariaDB logs
-docker compose logs mariadb
-
-# Restart MariaDB
-docker compose restart mariadb
-```
-
-### Port 8085 already in use
-Edit `docker-compose.yml` and change the port mapping:
-```yaml
-ports:
-  - "8086:80"  # Change 8085 to any available port
-```
-
-### Installer fails at database restore
-1. Check if `db/bookstack.sql` exists
-2. Verify database credentials match in `docker-compose.yml` and `install.bat`
-3. Ensure MariaDB is fully started (wait 10-15 seconds)
-
----
-
-## Security Notes
-
-**WARNING: For production use:**
-
-1. **Change default passwords** in `docker-compose.yml`:
-```yaml
-   MARIADB_ROOT_PASSWORD: <strong-password>
-   MARIADB_PASSWORD: <strong-password>
-```
-
-2. **Generate new APP_KEY**:
-```bash
-   docker exec -it bookstack php artisan key:generate --show
-```
-   Then update `APP_KEY` in `docker-compose.yml`
-
-3. **Change BookStack admin password** after first login
-
-4. **Use HTTPS** with a reverse proxy (nginx, Caddy, Traefik)
-
-5. **Don't commit sensitive data** to public repos
+**Restore features:**
+- Interactive backup selection
+- Confirmation prompt before overwrite
+- Full database and image restore
 
 ---
 
 ## Updating BookStack
+
 ```bash
-# Pull latest BookStack image
 docker compose pull bookstack
-
-# Recreate containers
 docker compose up -d --force-recreate
-
-# Run migrations
 docker exec -it bookstack php artisan migrate --force
 ```
 
 ---
 
-## Cloning to New Machine
+## Versioning System
 
-1. **Clone the repository**
-```bash
-   git clone https://github.com/alvinmdancy/bookstack-git.git
-   cd bookstack-git
+This project uses a structured versioning approach:
+
+- `VERSION` file — tracks the installed version state
+- Git tags — mark available releases
+- Update system — enables controlled upgrades
+
+**Version format:**
+
+| Version | Meaning         |
+|---------|-----------------|
+| v1.0.0  | Initial release |
+| v1.1.0  | New features    |
+| v1.1.1  | Bug fixes       |
+| v2.0.0  | Major rewrite   |
+
+---
+
+## Security Notes
+
+> **Important:** The default credentials are for local/development use only. Update all of the following before deploying to production.
+
+**Change default database credentials in `docker-compose.yml`:**
+```yaml
+MARIADB_ROOT_PASSWORD: strong-password
+MARIADB_PASSWORD: strong-password
 ```
 
-2. **Run installer** (Windows: `install.bat`, Linux/Mac: `install.sh`)
+**Generate a new application key:**
+```bash
+docker exec -it bookstack php artisan key:generate --show
+```
 
-3. All images and database content will be automatically restored.
+**Additional recommendations:**
+- Enable HTTPS via Nginx, Caddy, or Traefik
+- Do not expose database ports publicly
+- Change the default admin password after first login
+- Avoid committing sensitive data to version control
+
+---
+
+## Troubleshooting
+
+**Images not showing**
+```bash
+docker exec -it bookstack ls -la /config/www/uploads/images
+
+# Fix permissions
+docker exec -it bookstack chown -R abc:abc /config/www/uploads/images
+```
+
+**Database issues**
+```bash
+docker compose ps
+docker compose logs mariadb
+docker compose restart mariadb
+```
+
+**Port already in use**
+
+Update the port mapping in `docker-compose.yml`:
+```yaml
+ports:
+  - "8086:80"
+```
+
+**Restore failure**
+
+Verify the following:
+- `db/bookstack.sql` exists
+- DB credentials in the restore script match `docker-compose.yml`
+- MariaDB has fully started (wait 10–15 seconds after starting)
+
+---
+
+## Cloning to a New Machine
+
+```bash
+git clone https://github.com/alvinmdancy/Bookstack.git
+cd Bookstack/bookstack-git
+install.bat   # or ./install.sh on Linux/macOS
+```
+
+The database, images, and configuration will all be restored automatically.
 
 ---
 
 ## Environment Variables
 
-Key configuration in `docker-compose.yml`:
-
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `APP_URL` | `http://localhost:8085` | BookStack URL |
-| `DB_HOST` | `mariadb` | Database hostname |
-| `DB_DATABASE` | `bookstackapp` | Database name |
-| `DB_USERNAME` | `bookstack` | Database user |
-| `DB_PASSWORD` | `bookstackpass` | Database password |
-| `MARIADB_ROOT_PASSWORD` | `secretrootpass` | MariaDB root password |
-| `TZ` | `America/New_York` | Container timezone |
-
----
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Submit a pull request
-
----
-
-## License
-
-This project is for educational and personal use. BookStack itself is licensed under MIT.
-
----
-
-## Support
-
-- **BookStack Documentation**: https://www.bookstackapp.com/docs/
-- **Issues**: Open an issue on GitHub
-- **Docker Help**: https://docs.docker.com/
+| Variable                | Default             | Description        |
+|-------------------------|---------------------|--------------------|
+| APP_URL                 | http://localhost:8085 | Base URL           |
+| DB_HOST                 | mariadb             | Database host      |
+| DB_DATABASE             | bookstackapp        | Database name      |
+| DB_USERNAME             | bookstack           | Database user      |
+| DB_PASSWORD             | bookstackpass       | Database password  |
+| MARIADB_ROOT_PASSWORD   | secretrootpass      | Root password      |
+| TZ                      | America/New_York    | Timezone           |
 
 ---
 
@@ -316,10 +302,21 @@ This project is for educational and personal use. BookStack itself is licensed u
 - Personal knowledge base
 - Team documentation
 - Internal wiki
-- Project documentation
-- Student notes
+- Developer notes system
 - Client documentation portal
+- Educational environments
 
 ---
 
-**Made for portable documentation**
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Commit your changes
+4. Submit a pull request
+
+---
+
+## License
+
+For educational and personal use. BookStack itself is licensed under MIT — see [bookstackapp.com](https://www.bookstackapp.com/) for details.

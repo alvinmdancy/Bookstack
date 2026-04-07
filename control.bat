@@ -1,8 +1,11 @@
 @echo off
+setlocal enabledelayedexpansion
 cd /d %~dp0
 
+:menu
+cls
 set LOCAL_TAG=unknown
-set LATEST_TAG=
+set LATEST_TAG=unknown
 set UPDATE_AVAILABLE=0
 
 :: =========================
@@ -10,6 +13,10 @@ set UPDATE_AVAILABLE=0
 :: =========================
 if exist VERSION (
     set /p LOCAL_TAG=<VERSION
+    :: Trim whitespace
+    for /f "tokens=* delims= " %%a in ("!LOCAL_TAG!") do set LOCAL_TAG=%%a
+) else (
+    echo WARNING: VERSION file not found
 )
 
 :: =========================
@@ -17,31 +24,41 @@ if exist VERSION (
 :: =========================
 git fetch --tags origin >nul 2>&1
 
-for /f %%i in ('git tag --sort=-v:refname') do (
+:: Get the latest tag
+for /f "delims=" %%i in ('git tag --sort^=-v:refname 2^>nul') do (
     set LATEST_TAG=%%i
     goto :latest_done
 )
 
 :latest_done
 
+:: Trim whitespace from LATEST_TAG
+for /f "tokens=* delims= " %%a in ("!LATEST_TAG!") do set LATEST_TAG=%%a
+
 :: =========================
 :: Compare versions
 :: =========================
-if not "%LOCAL_TAG%"=="%LATEST_TAG%" (
-    set UPDATE_AVAILABLE=1
+if not "!LOCAL_TAG!"=="unknown" (
+    if not "!LATEST_TAG!"=="unknown" (
+        if not "!LOCAL_TAG!"=="!LATEST_TAG!" (
+            set UPDATE_AVAILABLE=1
+        )
+    )
 )
-:menu
-cls
+
 echo ================================
 echo     BookStack Control Panel
 echo ================================
 echo.
 echo Go to http://localhost:8085 in your browser to access BookStack
 echo.
-echo Current Version : %LOCAL_TAG%
-echo Latest Version  : %LATEST_TAG%
+echo Current Version : !LOCAL_TAG!
+echo Latest Version  : !LATEST_TAG!
 
-if "%UPDATE_AVAILABLE%"=="1" (
+:: DEBUG: Uncomment to see exact comparison
+:: echo DEBUG: Comparing [!LOCAL_TAG!] with [!LATEST_TAG!]
+
+if "!UPDATE_AVAILABLE!"=="1" (
     echo.
     echo *** UPDATE AVAILABLE ***
     echo.
@@ -56,13 +73,13 @@ echo 3. Update BookStack
 echo 4. Restart BookStack
 echo 5. Exit
 echo.
-set /p choice=Select an option:
+set /p choice=Select an option: 
 
-if "%choice%"=="1" goto start
-if "%choice%"=="2" goto stop
-if "%choice%"=="3" goto update
-if "%choice%"=="4" goto restart
-if "%choice%"=="5" exit
+if "!choice!"=="1" goto start
+if "!choice!"=="2" goto stop
+if "!choice!"=="3" goto update
+if "!choice!"=="4" goto restart
+if "!choice!"=="5" exit
 
 goto menu
 
@@ -73,7 +90,8 @@ echo ================================
 
 docker compose up -d
 pause
-echo go to http://localhost:8085 in your browser to access BookStack
+echo Go to http://localhost:8085 in your browser to access BookStack
+call control.bat
 goto menu
 
 :stop
@@ -83,6 +101,7 @@ echo ================================
 
 docker compose down
 pause
+call control.bat
 goto menu
 
 :update
@@ -97,4 +116,5 @@ echo ================================
 docker compose down
 docker compose up -d
 pause
+call control.bat
 goto menu
