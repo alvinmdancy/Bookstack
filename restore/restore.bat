@@ -20,12 +20,29 @@ set "DB_PASS=rootpass"
 set "TEMP_DIR=%BASE_DIR%\temp_restore"
 
 :: =========================
-:: CHECK BACKUPS
+:: CHECK BACKUPS OR AUTO MODE
 :: =========================
+
+set "AUTO_FILE=%~1"
+
+if defined AUTO_FILE (
+    if exist "%AUTO_FILE%" (
+        set "BACKUP_FILE=%AUTO_FILE%"
+        echo Auto-selected backup:
+        echo !BACKUP_FILE!
+        goto :CONFIRM
+    ) else (
+        echo ERROR: Provided backup file not found
+        echo %AUTO_FILE%
+        if not defined AUTO_FILE pause
+        exit /b 1
+    )
+)
+
 if not exist "%BACKUP_BASE_DIR%\*.zip" (
     echo No backups found in:
     echo %BACKUP_BASE_DIR%
-    pause
+    if not defined AUTO_FILE pause
     exit /b 1
 )
 
@@ -42,7 +59,7 @@ for /f "delims=" %%F in ('dir /b /o-d "%BACKUP_BASE_DIR%\*.zip"') do (
 
 if !count! equ 0 (
     echo No backups found
-    pause
+    if not defined AUTO_FILE pause
     exit /b 1
 )
 
@@ -51,23 +68,27 @@ set /p BACKUP_NUM="Select backup number to restore (1 = latest): "
 
 if not defined backup%BACKUP_NUM% (
     echo Invalid selection
-    pause
+    if not defined AUTO_FILE pause
     exit /b 1
 )
 
 set "BACKUP_FILE=%BACKUP_BASE_DIR%\!backup%BACKUP_NUM%!"
 
+:CONFIRM
 echo.
-echo Selected: !BACKUP_FILE!
-set /p CONFIRM="THIS WILL OVERWRITE CURRENT DATA. Type YES to continue: "
 
-if /i not "%CONFIRM%"=="YES" (
-    echo Restore cancelled
-    pause
-    exit /b 0
+if defined AUTO_FILE (
+    echo Auto mode detected - skipping confirmation
+) else (
+    echo Selected: !BACKUP_FILE!
+    set /p CONFIRM="THIS WILL OVERWRITE CURRENT DATA. Type YES to continue: "
+
+    if /i not "!CONFIRM!"=="YES" (
+        echo Restore cancelled
+        if not defined AUTO_FILE pause
+        exit /b 0
+    )
 )
-
-echo.
 
 :: =========================
 :: EXTRACT
@@ -94,7 +115,7 @@ docker exec -i %DB_CONTAINER% mysql -u%DB_USER% -p%DB_PASS% %DB_NAME% < "%RESTOR
 
 if errorlevel 1 (
     echo [ERROR] Database restore failed
-    pause
+    if not defined AUTO_FILE pause
     exit /b 1
 )
 
@@ -125,4 +146,4 @@ echo.
 echo Restart containers:
 echo docker compose restart
 
-pause
+if not defined AUTO_FILE pause

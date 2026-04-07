@@ -74,7 +74,30 @@ if %errorlevel% neq 0 (
 
 echo OK Database ready
 echo.
+:: =========================
+:: AUTO SELECT LATEST BACKUP
+:: =========================
 
+set "BACKUP_BASE_DIR=%cd%\backup\backups"
+set "LATEST_BACKUP="
+
+for /f "delims=" %%F in ('dir /b /o-d "%BACKUP_BASE_DIR%\*.zip" 2^>nul') do (
+    set "LATEST_BACKUP=%BACKUP_BASE_DIR%\%%F"
+    goto :found_latest
+)
+
+echo WARNING: No backups found for auto-restore
+goto :skip_restore
+
+:found_latest
+echo Latest backup detected:
+echo !LATEST_BACKUP!
+
+echo Restoring automatically...
+call "%~dp0restore\restore.bat" "%LATEST_BACKUP%" >nul 2>&1
+
+:skip_restore
+echo.
 :: =========================
 :: PHASE 4 - CREATE DB + RESTORE
 :: =========================
@@ -93,23 +116,28 @@ echo Restoring database...
 
 set /a count=0
 
-:restore_db
-set /a count+=1
+:: =========================
+:: PHASE 4 - RESTORE BACKUP
+:: =========================
+echo [4/7] Restoring latest backup...
 
-docker exec -i mariadb mysql -uroot -prootpass bookstackapp < "db\bookstack.sql"
+set "RESTORE_SCRIPT=%~dp0restore\restore.bat"
 
-if %errorlevel% neq 0 (
-    echo WARNING: Restore attempt !count! failed
-    if !count! GEQ 5 (
-        echo ERROR: DB restore failed permanently
-        pause
-        exit /b 1
-    )
-    timeout /t 3 >nul
-    goto restore_db
+if not exist "%RESTORE_SCRIPT%" (
+    echo ERROR: restore.bat not found
+    pause
+    exit /b 1
 )
 
-echo OK Database restored
+call "%RESTORE_SCRIPT%" "%LATEST_BACKUP%" >nul 2>&1
+
+if %errorlevel% neq 0 (
+    echo ERROR: Restore failed
+    pause
+    exit /b 1
+)
+
+echo OK Backup restored
 echo.
 
 :: =========================
