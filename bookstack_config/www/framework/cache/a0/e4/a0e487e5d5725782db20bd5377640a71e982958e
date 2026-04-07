@@ -1,0 +1,240 @@
+1776006849s:8595:"<h1 id="bkmrk-github-basics-guide">GitHub Basics Guide</h1>
+<p id="bkmrk-a-beginner-friendly-">A beginner-friendly reference for using GitHub day to day.</p>
+<hr id="bkmrk-">
+<h2 id="bkmrk-what-is-github%3F">What Is GitHub?</h2>
+<p id="bkmrk-git-is-a-version-con"><strong>Git</strong> is a version control system that tracks changes to your files over time.<br>
+<strong>GitHub</strong> is a cloud-based platform that hosts Git repositories so you can collaborate, back up, and share your code.</p>
+<hr id="bkmrk--1">
+<h2 id="bkmrk-key-concepts">Key Concepts</h2>
+<table id="bkmrk-term-what-it-means-r">
+<thead>
+<tr>
+<th>Term</th>
+<th>What It Means</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Repository (Repo)</strong></td>
+<td>A project folder tracked by Git</td>
+</tr>
+<tr>
+<td><strong>Clone</strong></td>
+<td>Download a copy of a repo to your machine</td>
+</tr>
+<tr>
+<td><strong>Branch</strong></td>
+<td>An isolated copy of the code to work in safely</td>
+</tr>
+<tr>
+<td><strong>Commit</strong></td>
+<td>A saved snapshot of your changes</td>
+</tr>
+<tr>
+<td><strong>Push</strong></td>
+<td>Upload your commits to GitHub</td>
+</tr>
+<tr>
+<td><strong>Pull</strong></td>
+<td>Download the latest changes from GitHub</td>
+</tr>
+<tr>
+<td><strong>Pull Request (PR)</strong></td>
+<td>A request to merge your branch into another branch</td>
+</tr>
+<tr>
+<td><strong>Merge</strong></td>
+<td>Combining one branch into another</td>
+</tr>
+<tr>
+<td><strong>Fork</strong></td>
+<td>Your own personal copy of someone else's repo</td>
+</tr>
+</tbody>
+</table>
+<hr id="bkmrk--2">
+<h2 id="bkmrk-setting-up-git-%28one-">Setting Up Git (One Time)</h2>
+<pre id="bkmrk-%23-set-your-identity-"><code class="language-bash"># Set your identity
+git config --global user.name "Your Name"
+git config --global user.email "you@example.com"
+
+# Verify your settings
+git config --list
+</code></pre>
+<hr id="bkmrk--3">
+<h2 id="bkmrk-starting-a-project">Starting a Project</h2>
+<h3 id="bkmrk-option-a-%E2%80%94-create-a-">Option A — Create a new repo locally</h3>
+<pre id="bkmrk-mkdir-my-project-cd-"><code class="language-bash">mkdir my-project
+cd my-project
+git init
+</code></pre>
+<h3 id="bkmrk-option-b-%E2%80%94-clone-an-">Option B — Clone an existing repo from GitHub</h3>
+<pre id="bkmrk-git-clone-https%3A%2F%2Fgi"><code class="language-bash">git clone https://github.com/username/repo-name.git
+cd repo-name
+</code></pre>
+<hr id="bkmrk--4">
+<h2 id="bkmrk-the-basic-daily-work">The Basic Daily Workflow</h2>
+<p id="bkmrk-this-is-the-loop-you">This is the loop you will use every single day:</p>
+<pre id="bkmrk-pull-%E2%86%92-make-changes-"><code>Pull → Make Changes → Stage → Commit → Push
+</code></pre>
+<h3 id="bkmrk-1.-pull-the-latest-c">1. Pull the latest changes first</h3>
+<pre id="bkmrk-git-pull-origin-main"><code class="language-bash">git pull origin main
+</code></pre>
+<h3 id="bkmrk-2.-make-your-changes">2. Make your changes</h3>
+<p id="bkmrk-edit-your-files-in-a">Edit your files in any editor.</p>
+<h3 id="bkmrk-3.-check-what-change">3. Check what changed</h3>
+<pre id="bkmrk-git-status"><code class="language-bash">git status
+</code></pre>
+<h3 id="bkmrk-4.-stage-your-change">4. Stage your changes</h3>
+<pre id="bkmrk-%23-stage-a-specific-f"><code class="language-bash"># Stage a specific file
+git add filename.txt
+
+# Stage everything at once
+git add .
+</code></pre>
+<h3 id="bkmrk-5.-commit-your-chang">5. Commit your changes</h3>
+<pre id="bkmrk-git-commit--m-%22brief"><code class="language-bash">git commit -m "Brief description of what you changed"
+</code></pre>
+<blockquote id="bkmrk-tip%3A-write-commit-me">
+<p><strong>Tip:</strong> Write commit messages in plain English. Example: <code>"Fix login bug"</code> or <code>"Add README file"</code></p>
+</blockquote>
+<h3 id="bkmrk-6.-push-to-github">6. Push to GitHub</h3>
+<pre id="bkmrk-git-push-origin-main"><code class="language-bash">git push origin main
+</code></pre>
+<hr id="bkmrk--5">
+<h2 id="bkmrk-working-with-branche">Working with Branches</h2>
+<p id="bkmrk-branches-let-you-wor">Branches let you work on features or fixes without affecting the main codebase.</p>
+<pre id="bkmrk-%23-create-and-switch-"><code class="language-bash"># Create and switch to a new branch
+git checkout -b feature/my-new-feature
+
+# See all branches
+git branch
+
+# Switch between branches
+git checkout main
+
+# Push your branch to GitHub
+git push origin feature/my-new-feature
+
+# Merge a branch into main (do this locally or via Pull Request)
+git checkout main
+git merge feature/my-new-feature
+
+# Delete a branch after merging
+git branch -d feature/my-new-feature
+</code></pre>
+<hr id="bkmrk--6">
+<h2 id="bkmrk-viewing-history">Viewing History</h2>
+<pre id="bkmrk-%23-see-the-commit-his"><code class="language-bash"># See the commit history
+git log
+
+# Condensed one-line view
+git log --oneline
+
+# See what changed in a specific commit
+git show &lt;commit-hash&gt;
+
+# See unstaged changes in your files
+git diff
+</code></pre>
+<hr id="bkmrk--7">
+<h2 id="bkmrk-undoing-things">Undoing Things</h2>
+<pre id="bkmrk-%23-undo-changes-to-a-"><code class="language-bash"># Undo changes to a file (before staging)
+git restore filename.txt
+
+# Unstage a file (keep changes, just un-add it)
+git restore --staged filename.txt
+
+# Undo the last commit (keep the changes in your files)
+git reset --soft HEAD~1
+
+# See a list of all recent HEAD positions (useful for recovery)
+git reflog
+</code></pre>
+<blockquote id="bkmrk-warning%3A-avoid-git-r">
+<p><strong>Warning:</strong> Avoid <code>git reset --hard</code> unless you are sure — it permanently discards changes.</p>
+</blockquote>
+<hr id="bkmrk--8">
+<h2 id="bkmrk-pull-requests-%28prs%29">Pull Requests (PRs)</h2>
+<p id="bkmrk-a-pull-request-is-ho">A Pull Request is how you propose merging your branch into <code>main</code> (or another branch) on GitHub.</p>
+<ol id="bkmrk-push-your-branch-to-">
+<li>Push your branch to GitHub</li>
+<li>Go to the repo on github.com</li>
+<li>Click <strong>"Compare &amp; pull request"</strong></li>
+<li>Add a title and description</li>
+<li>Click <strong>"Create pull request"</strong></li>
+<li>A teammate reviews and approves it</li>
+<li>Click <strong>"Merge pull request"</strong></li>
+</ol>
+<hr id="bkmrk--9">
+<h2 id="bkmrk-common-issues-%26-fixe">Common Issues &amp; Fixes</h2>
+<h3 id="bkmrk-merge-conflict">Merge Conflict</h3>
+<p id="bkmrk-happens-when-two-peo">Happens when two people edited the same part of a file.</p>
+<pre id="bkmrk-%23-after-a-failed-mer"><code class="language-bash"># After a failed merge, open the conflicted file and look for:
+&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD
+your changes
+=======
+their changes
+&gt;&gt;&gt;&gt;&gt;&gt;&gt; branch-name
+
+# Edit the file to keep what you want, then:
+git add filename.txt
+git commit -m "Resolve merge conflict"
+</code></pre>
+<h3 id="bkmrk-wrong-branch">Wrong Branch</h3>
+<pre id="bkmrk-%23-stash-your-work%2C-s"><code class="language-bash"># Stash your work, switch branches, then pop it back
+git stash
+git checkout correct-branch
+git stash pop
+</code></pre>
+<h3 id="bkmrk-forgot-to-pull-befor">Forgot to Pull Before Working</h3>
+<pre id="bkmrk-git-pull---rebase-or"><code class="language-bash">git pull --rebase origin main
+</code></pre>
+<hr id="bkmrk--10">
+<h2 id="bkmrk-quick-reference-chea">Quick Reference Cheat Sheet</h2>
+<pre id="bkmrk-git-clone-%3Curl%3E-%23-do"><code class="language-bash">git clone &lt;url&gt;           # Download a repo
+git status                # See what's changed
+git add .                 # Stage all changes
+git commit -m "message"   # Save a snapshot
+git push origin main      # Upload to GitHub
+git pull origin main      # Download latest changes
+git checkout -b &lt;branch&gt;  # Create + switch to new branch
+git log --oneline         # See commit history
+git diff                  # See unstaged changes
+</code></pre>
+<hr id="bkmrk--11">
+<h2 id="bkmrk-recommended-branch-n">Recommended Branch Naming Conventions</h2>
+<table id="bkmrk-type-format-example-">
+<thead>
+<tr>
+<th>Type</th>
+<th>Format</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Feature</td>
+<td><code>feature/description</code></td>
+<td><code>feature/add-login-page</code></td>
+</tr>
+<tr>
+<td>Bug Fix</td>
+<td><code>fix/description</code></td>
+<td><code>fix/null-pointer-error</code></td>
+</tr>
+<tr>
+<td>Hotfix</td>
+<td><code>hotfix/description</code></td>
+<td><code>hotfix/critical-auth-bug</code></td>
+</tr>
+<tr>
+<td>Release</td>
+<td><code>release/version</code></td>
+<td><code>release/v1.2.0</code></td>
+</tr>
+</tbody>
+</table>
+<hr id="bkmrk--12">
+<p id="bkmrk-last-updated%3A-april-"><em>Last updated: April 2026</em></p>
+";

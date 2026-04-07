@@ -1,0 +1,237 @@
+1776005360s:13309:"<h1 id="bkmrk-%F0%9F%A7%A0-complete-github-wo"></h1>
+<h2 id="bkmrk-%E2%9C%85-part-1%3A-create-%26-p">✅ PART 1: Create &amp; Push Your Script Project to GitHub</h2>
+<h3 id="bkmrk-1.-create-your-proje">1. Create your project folder and script locally:</h3>
+<div class="contain-inline-size rounded-2xl relative bg-token-sidebar-surface-primary" id="bkmrk-bash-mkdir-%7E%2Fgit%2Faut">
+<div class="flex items-center text-token-text-secondary px-4 py-2 text-xs font-sans justify-between h-9 bg-token-sidebar-surface-primary select-none rounded-t-2xl">bash</div>
+<div class="overflow-y-auto p-4" dir="ltr"><code class="whitespace-pre! language-bash"><span class="hljs-built_in">mkdir</span> ~/git/auto-maintenance
+<span class="hljs-built_in">cd</span> ~/git/auto-maintenance
+</code></div>
+</div>
+<p id="bkmrk-create-a-simple-scri">Create a simple script, e.g. <code>maintain.sh</code>:</p>
+<div class="contain-inline-size rounded-2xl relative bg-token-sidebar-surface-primary" id="bkmrk-bash-nano-maintain.s">
+<div class="flex items-center text-token-text-secondary px-4 py-2 text-xs font-sans justify-between h-9 bg-token-sidebar-surface-primary select-none rounded-t-2xl">bash</div>
+<div class="overflow-y-auto p-4" dir="ltr"><code class="whitespace-pre! language-bash">nano maintain.sh
+</code></div>
+</div>
+<p id="bkmrk-example-contents%3A">Example contents:</p>
+<div class="contain-inline-size rounded-2xl relative bg-token-sidebar-surface-primary" id="bkmrk-bash-%23%21%2Fbin%2Fbash-ech">
+<div class="flex items-center text-token-text-secondary px-4 py-2 text-xs font-sans justify-between h-9 bg-token-sidebar-surface-primary select-none rounded-t-2xl">bash</div>
+<div class="overflow-y-auto p-4" dir="ltr"><code class="whitespace-pre! language-bash"><span class="hljs-meta">#!/bin/bash</span>
+<span class="hljs-built_in">echo</span> <span class="hljs-string">"[INFO] <span class="hljs-subst">$(date)</span></span>: Running system update and cleanup..."
+sudo apt update &amp;&amp; sudo apt upgrade -y &amp;&amp; sudo apt autoremove -y
+</code></div>
+</div>
+<p id="bkmrk-make-it-executable%3A">Make it executable:</p>
+<div class="contain-inline-size rounded-2xl relative bg-token-sidebar-surface-primary" id="bkmrk-bash-chmod-%2Bx-mainta">
+<div class="flex items-center text-token-text-secondary px-4 py-2 text-xs font-sans justify-between h-9 bg-token-sidebar-surface-primary select-none rounded-t-2xl">bash</div>
+<div class="overflow-y-auto p-4" dir="ltr"><code class="whitespace-pre! language-bash"><span class="hljs-built_in">chmod</span> +x maintain.sh
+</code></div>
+</div>
+<hr id="bkmrk--1">
+<h3 id="bkmrk-2.-initialize-git-an">2. Initialize Git and Push to GitHub</h3>
+<h4 id="bkmrk-set-up-git-%28once-per">Set up Git (once per machine):</h4>
+<div class="contain-inline-size rounded-2xl relative bg-token-sidebar-surface-primary" id="bkmrk-bash-git-config---gl">
+<div class="flex items-center text-token-text-secondary px-4 py-2 text-xs font-sans justify-between h-9 bg-token-sidebar-surface-primary select-none rounded-t-2xl">bash</div>
+<div class="overflow-y-auto p-4" dir="ltr"><code class="whitespace-pre! language-bash">git config --global user.name <span class="hljs-string">"Your Name"</span>
+git config --global user.email <span class="hljs-string">"you@example.com"</span>
+</code></div>
+</div>
+<h4 id="bkmrk-create-a-github-repo">Create a GitHub repo:</h4>
+<ul id="bkmrk-go-to-https%3A%2F%2Fgithub">
+<li>
+<p>Go to <a href="https://github.com">https://github.com</a></p>
+</li>
+<li>
+<p>Click <strong>New Repository</strong></p>
+</li>
+<li>
+<p>Name: <code>auto-maintenance</code></p>
+</li>
+<li>
+<p><strong>Do not check "Initialize with README"</strong></p>
+</li>
+<li>
+<p>Choose <strong>SSH</strong> URL for remote access</p>
+</li>
+</ul>
+<h4 id="bkmrk-push-to-github%3A">Push to GitHub:</h4>
+<div class="contain-inline-size rounded-2xl relative bg-token-sidebar-surface-primary" id="bkmrk-bash-git-init-git-ad">
+<div class="flex items-center text-token-text-secondary px-4 py-2 text-xs font-sans justify-between h-9 bg-token-sidebar-surface-primary select-none rounded-t-2xl">bash</div>
+<div class="overflow-y-auto p-4" dir="ltr"><code class="whitespace-pre! language-bash">git init
+git add .
+git commit -m <span class="hljs-string">"Initial commit: maintenance script"</span>
+git branch -M main
+git remote add origin git@github.com:yourusername/auto-maintenance.git
+git push -u origin main
+</code></div>
+</div>
+<hr id="bkmrk--2">
+<h2 id="bkmrk-%E2%9C%85-part-2%3A-clone-and-">✅ PART 2: Clone and Use Project on Another Machine</h2>
+<p id="bkmrk-on-any-new-machine%3A">On any new machine:</p>
+<div class="contain-inline-size rounded-2xl relative bg-token-sidebar-surface-primary" id="bkmrk-bash-git-clone-git%40g">
+<div class="flex items-center text-token-text-secondary px-4 py-2 text-xs font-sans justify-between h-9 bg-token-sidebar-surface-primary select-none rounded-t-2xl">bash</div>
+<div class="overflow-y-auto p-4" dir="ltr"><code class="whitespace-pre! language-bash">git <span class="hljs-built_in">clone</span> git@github.com:yourusername/auto-maintenance.git
+<span class="hljs-built_in">cd</span> auto-maintenance
+</code></div>
+</div>
+<p id="bkmrk-now-you-can-run-the-">Now you can run the script:</p>
+<div class="contain-inline-size rounded-2xl relative bg-token-sidebar-surface-primary" id="bkmrk-bash-.%2Fmaintain.sh">
+<div class="flex items-center text-token-text-secondary px-4 py-2 text-xs font-sans justify-between h-9 bg-token-sidebar-surface-primary select-none rounded-t-2xl">bash</div>
+<div class="overflow-y-auto p-4" dir="ltr"><code class="whitespace-pre! language-bash">./maintain.sh
+</code></div>
+</div>
+<hr id="bkmrk--3">
+<h2 id="bkmrk-%E2%9C%85-part-3%3A-pull-lates">✅ PART 3: Pull Latest Changes From GitHub</h2>
+<p id="bkmrk-whenever-updates-are">Whenever updates are made to the project (on another machine or GitHub):</p>
+<div class="contain-inline-size rounded-2xl relative bg-token-sidebar-surface-primary" id="bkmrk-bash-cd-%7E%2Fgit%2Fauto-m">
+<div class="flex items-center text-token-text-secondary px-4 py-2 text-xs font-sans justify-between h-9 bg-token-sidebar-surface-primary select-none rounded-t-2xl">bash</div>
+<div class="overflow-y-auto p-4" dir="ltr"><code class="whitespace-pre! language-bash"><span class="hljs-built_in">cd</span> ~/git/auto-maintenance
+git pull origin main
+</code></div>
+</div>
+<hr id="bkmrk--4">
+<h2 id="bkmrk-%E2%9C%85-part-4%3A-automate-w">✅ PART 4: Automate with <code>cron</code></h2>
+<h3 id="bkmrk-%F0%9F%94%81-run-the-script-aut">🔁 Run the script automatically on a schedule</h3>
+<ol id="bkmrk-open-crontab%3A">
+<li>
+<p>Open crontab:</p>
+</li>
+</ol>
+<div class="contain-inline-size rounded-2xl relative bg-token-sidebar-surface-primary" id="bkmrk-bash-crontab--e">
+<div class="flex items-center text-token-text-secondary px-4 py-2 text-xs font-sans justify-between h-9 bg-token-sidebar-surface-primary select-none rounded-t-2xl">bash</div>
+<div class="overflow-y-auto p-4" dir="ltr"><code class="whitespace-pre! language-bash">crontab -e
+</code></div>
+</div>
+<ol id="bkmrk-add-a-job-to-run-dai" start="2">
+<li>
+<p>Add a job to run daily at 3 AM:</p>
+</li>
+</ol>
+<div class="contain-inline-size rounded-2xl relative bg-token-sidebar-surface-primary" id="bkmrk-bash-0-3-%2A-%2A-%2A-%2Fhome">
+<div class="flex items-center text-token-text-secondary px-4 py-2 text-xs font-sans justify-between h-9 bg-token-sidebar-surface-primary select-none rounded-t-2xl">bash</div>
+<div class="overflow-y-auto p-4" dir="ltr"><code class="whitespace-pre! language-bash">0 3 * * * /home/youruser/git/auto-maintenance/maintain.sh &gt;&gt; /home/youruser/maintenance.log 2&gt;&amp;1
+</code></div>
+</div>
+<p id="bkmrk-%E2%9C%85-this-will%3A">✅ This will:</p>
+<ul id="bkmrk-run-the-script-daily">
+<li>
+<p>Run the script daily</p>
+</li>
+<li>
+<p>Log output to <code>maintenance.log</code></p>
+</li>
+</ul>
+<blockquote id="bkmrk-replace-%2Fhome%2Fyourus">
+<p>Replace <code>/home/youruser</code> with your actual user path (use <code>echo $HOME</code> to check).</p>
+</blockquote>
+<hr id="bkmrk--5">
+<h3 id="bkmrk-%F0%9F%94%81-optional%3A-pull-lat">🔁 Optional: Pull latest changes before running</h3>
+<p id="bkmrk-add-this-instead-to-">Add this instead to always use the latest script version from GitHub:</p>
+<div class="contain-inline-size rounded-2xl relative bg-token-sidebar-surface-primary" id="bkmrk-bash-0-3-%2A-%2A-%2A-cd-%2Fh">
+<div class="flex items-center text-token-text-secondary px-4 py-2 text-xs font-sans justify-between h-9 bg-token-sidebar-surface-primary select-none rounded-t-2xl">bash</div>
+<div class="overflow-y-auto p-4" dir="ltr"><code class="whitespace-pre! language-bash">0 3 * * * <span class="hljs-built_in">cd</span> /home/youruser/git/auto-maintenance &amp;&amp; git pull origin main &amp;&amp; ./maintain.sh &gt;&gt; /home/youruser/maintenance.log 2&gt;&amp;1
+</code></div>
+</div>
+<hr id="bkmrk--6">
+<h2 id="bkmrk-%E2%9C%85-part-5%3A-push-updat">✅ PART 5: Push Updates from Local Machine</h2>
+<p id="bkmrk-whenever-you-update-">Whenever you update your script:</p>
+<div class="contain-inline-size rounded-2xl relative bg-token-sidebar-surface-primary" id="bkmrk-bash-git-add-.-git-c">
+<div class="flex items-center text-token-text-secondary px-4 py-2 text-xs font-sans justify-between h-9 bg-token-sidebar-surface-primary select-none rounded-t-2xl">bash</div>
+<div class="overflow-y-auto p-4" dir="ltr"><code class="whitespace-pre! language-bash">git add .
+git commit -m <span class="hljs-string">"Updated maintenance logic"</span>
+git push
+</code></div>
+</div>
+<hr id="bkmrk--7">
+<h2 id="bkmrk-%F0%9F%97%82-recommended-.gitig">🗂 Recommended <code>.gitignore</code></h2>
+<p id="bkmrk-add-a-.gitignore-to-">Add a <code>.gitignore</code> to exclude system files, logs, or secrets:</p>
+<div class="contain-inline-size rounded-2xl relative bg-token-sidebar-surface-primary" id="bkmrk-bash-%23-.gitignore-%2A.">
+<div class="flex items-center text-token-text-secondary px-4 py-2 text-xs font-sans justify-between h-9 bg-token-sidebar-surface-primary select-none rounded-t-2xl">bash</div>
+<div class="overflow-y-auto p-4" dir="ltr"><code class="whitespace-pre! language-bash"><span class="hljs-comment"># .gitignore</span>
+*.<span class="hljs-built_in">log</span>
+*.bak
+.<span class="hljs-built_in">env</span>
+</code></div>
+</div>
+<p id="bkmrk-then%3A">Then:</p>
+<div class="contain-inline-size rounded-2xl relative bg-token-sidebar-surface-primary" id="bkmrk-bash-git-add-.gitign">
+<div class="flex items-center text-token-text-secondary px-4 py-2 text-xs font-sans justify-between h-9 bg-token-sidebar-surface-primary select-none rounded-t-2xl">bash</div>
+<div class="overflow-y-auto p-4" dir="ltr"><code class="whitespace-pre! language-bash">git add .gitignore
+git commit -m <span class="hljs-string">"Add .gitignore"</span>
+git push
+</code></div>
+</div>
+<hr id="bkmrk--8">
+<h2 id="bkmrk-%E2%9C%85-summary-table">✅ Summary Table</h2>
+<div class="_tableContainer_16hzy_1" id="bkmrk-task-command-create-">
+<div class="_tableWrapper_16hzy_14 group flex w-fit flex-col-reverse" tabindex="-1">
+<table class="w-fit min-w-(--thread-content-width)">
+<thead>
+<tr>
+<th>Task</th>
+<th>Command</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Create script project</td>
+<td><code>mkdir &amp;&amp; cd &amp;&amp; nano maintain.sh</code></td>
+</tr>
+<tr>
+<td>Initialize + push to GitHub</td>
+<td><code>git init &amp;&amp; add &amp;&amp; commit &amp;&amp; push</code></td>
+</tr>
+<tr>
+<td>Clone on new machine</td>
+<td><code>git clone ...</code></td>
+</tr>
+<tr>
+<td>Pull latest changes</td>
+<td><code>git pull origin main</code></td>
+</tr>
+<tr>
+<td>Run the script</td>
+<td><code>./maintain.sh</code></td>
+</tr>
+<tr>
+<td>Automate with cron</td>
+<td><code>crontab -e</code> + scheduled command</td>
+</tr>
+<tr>
+<td>Push updates</td>
+<td><code>git add . &amp;&amp; commit &amp;&amp; push</code></td>
+</tr>
+</tbody>
+</table>
+<br><br></div>
+</div>
+<h1 id="bkmrk-%F0%9F%94%81-typical-daily-work">🔁 Typical Daily Workflow</h1>
+<div class="_tableContainer_16hzy_1" id="bkmrk-git-pull-%23-get-lates">
+<div class="_tableWrapper_16hzy_14 group flex w-fit flex-col-reverse" tabindex="-1">
+<div class="w-full my-4">
+<div>
+<div class="relative">
+<div class="h-full min-h-0 min-w-0">
+<div class="h-full min-h-0 min-w-0">
+<div class="border corner-superellipse/1.1 border-token-border-light bg-token-bg-elevated-secondary rounded-3xl">
+<div class="corner-superellipse/1.1 rounded-3xl bg-token-bg-elevated-secondary">
+<div class="relative z-0 flex max-w-full">
+<div id="bkmrk-git-pull-%23-get-lates-1" dir="ltr" class="q9tKkq_viewer cm-editor z-10 light:cm-light dark:cm-light flex h-full w-full flex-col items-stretch ͼk ͼy">
+<div class="cm-scroller">
+<div class="cm-content q9tKkq_readonly"><span class="ͼs">git</span> pull <span class="ͼl"># get latest changes</span><br><span class="ͼl"># make changes</span><br><span class="ͼs">git</span> add .<br><span class="ͼs">git</span> commit <span class="ͼu">-m</span> <span class="ͼr">"message"</span><br><span class="ͼs">git</span> push <span class="ͼl"># send changes</span></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div>
+<div><br></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<p id="bkmrk-this-loop-is-the-hea">This loop is the heartbeat of collaborative development.</p>";
