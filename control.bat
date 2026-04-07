@@ -60,10 +60,10 @@ echo Go to http://localhost:8085 in your browser to access BookStack
 echo.
 
 :: Debugging output for clarity
-echo Current Version (Raw from file ) : "!LOCAL_TAG_RAW!"
-echo Current Version (Cleaned)     : "!LOCAL_TAG!"
-echo Latest Version                : "!LATEST_TAG!"
-
+:: echo Current Version (Raw from file ) : "!LOCAL_TAG_RAW!"
+echo Current Version: !LOCAL_TAG!
+echo Latest Version : !LATEST_TAG!
+echo.
 if not "!LOCAL_TAG!"=="unknown" (
     if not "!LATEST_TAG!"=="unknown" (
         if not "!LOCAL_TAG!"=="!LATEST_TAG!" (
