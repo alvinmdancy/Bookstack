@@ -2,7 +2,7 @@
 setlocal enabledelayedexpansion
 
 echo ==================================
-echo   BookStack Installer v2.1
+echo   BookStack Installer
 echo ==================================
 echo.
 
@@ -30,12 +30,12 @@ if not exist VERSION (
     
     :: Try to derive version from git tag
     for /f %%i in ('git describe --tags --abbrev=0 2^>nul') do (
-        echo %%i > VERSION
+        <nul set /p "=%%i" > VERSION
         goto version_done
     )
 
     :: fallback if git not available
-    echo v1.0.0 > VERSION
+    <nul set /p "=v1.0.0" > VERSION
 )
 
 :version_done
@@ -192,5 +192,5 @@ echo INSTALL COMPLETE - STABLE MODE
 echo ==================================
 echo Access: http://localhost:8085
 echo.
-
+call control.bat
 pause
