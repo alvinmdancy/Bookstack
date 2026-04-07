@@ -87,13 +87,6 @@ goto menu
 
 :update
 call update.bat
-:: reload version after update
-if exist VERSION (
-    set /p LOCAL_TAG=<VERSION
-)
-
-set UPDATE_AVAILABLE=0
-
 goto menu
 
 :restart
