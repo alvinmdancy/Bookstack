@@ -1,6 +1,6 @@
 @echo off
 setlocal enabledelayedexpansion
-cd /d %~dp0
+cd /d "%~dp0"
 
 echo ==================================
 echo   BookStack Installer
@@ -10,41 +10,39 @@ echo.
 :: =========================
 :: CONFIG
 :: =========================
-set CONTAINER_DB=mariadb
-set CONTAINER_APP=bookstack
-
-set DB_NAME=bookstackapp
-set DB_FILE=db\bookstack.sql
-
-:: IMPORTANT: MUST MATCH docker-compose.yml
-set DB_ROOT_PASS=rootpass
-
-set MAX_RETRIES=20
+set "CONTAINER_DB=mariadb"
+set "CONTAINER_APP=bookstack"
+set "DB_NAME=bookstackapp"
+set "DB_FILE=db\bookstack.sql"
+set "DB_ROOT_PASS=rootpass"
+set "MAX_RETRIES=20"
 
 :: =========================
 :: INIT VERSION FILE
 :: =========================
 echo.
 
-if not exist VERSION (
+if not exist "VERSION" (
     echo Creating VERSION file...
     
-    :: Try to derive version from git tag
-    :: FIX: Removed the space before the redirection operator '>'
-    for /f %%i in ('git describe --tags --abbrev=0 2^>nul') do (
-        <nul set /p "=%%i">VERSION
-        goto version_done
+    :: Safe way to get git tag without using single quotes or backticks in FOR /F
+    :: We'll redirect to a temp file first to avoid CMD parsing issues.
+    git describe --tags --abbrev=0 > temp_tag.txt 2>nul
+    
+    if %errorlevel% equ 0 (
+        set /p GIT_TAG=<temp_tag.txt
+        del temp_tag.txt
+        <nul set /p "=!GIT_TAG!">"VERSION"
+    ) else (
+        if exist temp_tag.txt del temp_tag.txt
+        <nul set /p "=v1.0.0">"VERSION"
     )
-
-    :: fallback if git not available
-    :: FIX: Removed the space before the redirection operator '>'
-    <nul set /p "=v1.0.0">VERSION
 )
 
-:version_done
-
-echo OK Version initialized
+echo OK Version initialized: 
+type VERSION
 echo.
+
 :: =========================
 :: PHASE 1 - DOCKER CHECK
 :: =========================
@@ -124,7 +122,7 @@ set /a count=0
 :restore_db
 set /a count+=1
 
-docker exec -i mariadb mysql -uroot -p%DB_ROOT_PASS% %DB_NAME% < %DB_FILE%
+docker exec -i mariadb mysql -uroot -p%DB_ROOT_PASS% %DB_NAME% < "%DB_FILE%"
 
 if %errorlevel% neq 0 (
     echo WARNING: Restore attempt !count! failed
@@ -156,15 +154,15 @@ if %errorlevel% neq 0 (
 
 echo OK BookStack running
 echo.
+
 :: =========================
 :: PHASE 6 - CREATING SHORTCUT
 :: =========================
 echo [6/7] Creating desktop shortcut...
-echo Creating desktop shortcut...
 
-set ICON_PATH=%cd%\assets\bookstack.ico
-set TARGET_PATH=%cd%\control.bat
-set SHORTCUT_NAME=BookStack.lnk
+set "ICON_PATH=%cd%\assets\bookstack.ico"
+set "TARGET_PATH=%cd%\control.bat"
+set "SHORTCUT_NAME=BookStack.lnk"
 
 powershell -NoProfile -ExecutionPolicy Bypass ^
 "$WshShell = New-Object -ComObject WScript.Shell; ^
@@ -177,6 +175,7 @@ $Shortcut.Save()"
 
 echo Shortcut created on desktop
 echo.
+
 :: =========================
 :: PHASE 7 - FINAL CHECK
 :: =========================
@@ -195,6 +194,10 @@ echo INSTALL COMPLETE - STABLE MODE
 echo ==================================
 echo Access: http://localhost:8085
 echo.
-call control.bat
+if exist "control.bat" (
+    call control.bat
+) else (
+    echo WARNING: control.bat not found to launch dashboard.
+)
 pause
 exit /b 0
