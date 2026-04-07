@@ -39,7 +39,7 @@ A fully containerized and portable BookStack deployment with automated installat
 
 ```bash
 git clone https://github.com/alvinmdancy/Bookstack.git
-cd Bookstack/bookstack-git
+cd Bookstack
 install.bat
 ```
 
