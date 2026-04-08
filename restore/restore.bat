@@ -9,7 +9,7 @@ echo.
 :: =========================
 :: BASE PATH (LOCKED TO YOUR STRUCTURE)
 :: =========================
-set "BASE_DIR=C:\Users\DevOps\Bookstack"
+set "BASE_DIR=C:\%USERPROFILE%\Bookstack"
 set "BACKUP_BASE_DIR=%BASE_DIR%\backup\backups"
 
 set "DB_CONTAINER=mariadb"
