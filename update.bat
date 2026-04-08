@@ -129,7 +129,7 @@ if not exist "%RESTORE_SCRIPT%" (
     exit /b 1
 )
 
-call "%RESTORE_SCRIPT%" "%LATEST_BACKUP%" >nul 2>&1
+set "RESTORE_SCRIPT=%USERPROFILE%\Bookstack\restore\restore.bat"
 
 if %errorlevel% neq 0 (
     echo ERROR: Restore failed
