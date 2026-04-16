@@ -102,8 +102,10 @@ echo     Starting BookStack....
 echo ================================
 
 docker compose up -d
-pause
+echo.
 echo Go to http://localhost:8085 in your browser to access BookStack
+echo.
+pause
 call control.bat
 goto menu
 
