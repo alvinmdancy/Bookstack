@@ -8,6 +8,21 @@ echo ==================================
 echo.
 
 :: =========================
+:: PULL LATEST FROM GITHUB
+:: =========================
+echo Pulling latest updates from GitHub...
+
+git pull origin main 2>nul
+
+if %errorlevel% equ 0 (
+    echo OK Updates pulled successfully
+) else (
+    echo WARNING: Git pull failed or no updates available
+    echo Continuing with local version...
+)
+echo.
+
+:: =========================
 :: SYNC VERSION FILE
 :: =========================
 echo Syncing VERSION file with latest git tag...
