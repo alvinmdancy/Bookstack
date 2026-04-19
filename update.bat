@@ -7,43 +7,89 @@ echo   BookStack Updater
 echo ==================================
 echo.
 
-:: =========================
-:: PULL LATEST FROM GITHUB
-:: =========================
-echo Pulling latest updates from GitHub...
+rem =========================
+rem FETCH LATEST TAGS
+rem =========================
+echo Fetching latest tags from GitHub...
 
-git pull origin main 2>nul
+git fetch --tags origin
 
 if %errorlevel% equ 0 (
-    echo OK Updates pulled successfully
+    echo OK Tags fetched successfully
 ) else (
-    echo WARNING: Git pull failed or no updates available
+    echo WARNING: Git fetch failed
     echo Continuing with local version...
 )
 echo.
 
-:: =========================
-:: SYNC VERSION FILE
-:: =========================
-echo Syncing VERSION file with latest git tag...
+rem =========================
+rem GET LATEST TAG
+rem =========================
+echo Finding latest version tag...
 
-git describe --tags --abbrev=0 > temp_tag.txt 2>nul
+for /f "delims=" %%i in ('git tag --sort^=-v:refname 2^>nul') do (
+    set "LATEST_TAG=%%i"
+    goto :found_tag
+)
+
+echo ERROR: No tags found in repository
+pause
+exit /b 1
+
+:found_tag
+rem Trim whitespace from tag
+for /f "tokens=* delims= " %%a in ("!LATEST_TAG!") do set "LATEST_TAG=%%a"
+
+echo Latest tag found: !LATEST_TAG!
+echo.
+
+rem =========================
+rem CLEAN LOCAL CHANGES
+rem =========================
+echo Preparing to switch versions...
+echo.
+
+git reset --hard
+echo.
+git clean -fd -e .env -e data/ -e backup/
+
+echo.
+echo OK Local changes cleaned
+echo.
+
+rem =========================
+rem CHECKOUT LATEST TAG
+rem =========================
+echo Checking out !LATEST_TAG!...
+echo.
+
+git checkout "!LATEST_TAG!"
 
 if %errorlevel% equ 0 (
-    set /p NEW_GIT_TAG=<temp_tag.txt
-    del temp_tag.txt
-
-    <nul set /p "=!NEW_GIT_TAG!">"VERSION"
-    echo OK Version synced: !NEW_GIT_TAG!
+    echo.
+    echo OK Switched to !LATEST_TAG!
 ) else (
-    if exist temp_tag.txt del temp_tag.txt
-    echo WARNING: Git tag not found. VERSION file not updated.
+    echo ERROR: Failed to checkout !LATEST_TAG!
+    echo.
+    echo Troubleshooting info:
+    git status
+    pause
+    exit /b 1
 )
 echo.
 
-:: =========================
-:: PHASE 1 - DOCKER CHECK
-:: =========================
+rem =========================
+rem UPDATE VERSION FILE
+rem =========================
+echo Updating VERSION file...
+
+<nul set /p "=!LATEST_TAG!">"VERSION"
+echo OK VERSION file updated to !LATEST_TAG!
+echo.
+
+rem =========================
+rem PHASE 1 - DOCKER CHECK
+rem =========================
 echo [1/7] Checking Docker...
 docker info >nul 2>&1
 if %errorlevel% neq 0 (
@@ -54,9 +100,9 @@ if %errorlevel% neq 0 (
 echo OK Docker running
 echo.
 
-:: =========================
-:: PHASE 2 - START CONTAINERS
-:: =========================
+rem =========================
+rem PHASE 2 - START CONTAINERS
+rem =========================
 echo [2/7] Starting containers...
 docker compose up -d
 if %errorlevel% neq 0 (
@@ -67,9 +113,9 @@ if %errorlevel% neq 0 (
 echo OK Containers started
 echo.
 
-:: =========================
-:: PHASE 3 - WAIT FOR MARIADB
-:: =========================
+rem =========================
+rem PHASE 3 - WAIT FOR MARIADB
+rem =========================
 echo [3/7] Waiting for MariaDB...
 set /a count=0
 
@@ -89,9 +135,9 @@ if %errorlevel% neq 0 (
 
 echo OK Database ready
 echo.
-:: =========================
-:: AUTO SELECT LATEST BACKUP
-:: =========================
+rem =========================
+rem AUTO SELECT LATEST BACKUP
+rem =========================
 
 set "BACKUP_BASE_DIR=%cd%\backup\backups"
 set "LATEST_BACKUP="
@@ -113,9 +159,9 @@ call "%~dp0restore\restore.bat" "%LATEST_BACKUP%" >nul 2>&1
 
 :skip_restore
 echo.
-:: =========================
-:: PHASE 4 - CREATE DB + RESTORE
-:: =========================
+rem =========================
+rem PHASE 4 - CREATE DB + RESTORE
+rem =========================
 echo [4/7] Preparing database...
 
 docker exec mariadb mysql -u root -prootpass -e "CREATE DATABASE IF NOT EXISTS bookstackapp;"
@@ -131,9 +177,9 @@ echo Restoring database...
 
 set /a count=0
 
-:: =========================
-:: PHASE 4 - RESTORE BACKUP
-:: =========================
+rem =========================
+rem PHASE 4 - RESTORE BACKUP
+rem =========================
 echo [4/7] Restoring latest backup...
 
 set "RESTORE_SCRIPT=%~dp0restore\restore.bat"
@@ -155,9 +201,9 @@ if %errorlevel% neq 0 (
 echo OK Backup restored
 echo.
 
-:: =========================
-:: PHASE 5 - VERIFY BOOKSTACK
-:: =========================
+rem =========================
+rem PHASE 5 - VERIFY BOOKSTACK
+rem =========================
 echo [5/7] Verifying BookStack container...
 
 docker ps | findstr bookstack >nul
@@ -170,9 +216,9 @@ if %errorlevel% neq 0 (
 echo OK BookStack running
 echo.
 
-:: =========================
-:: PHASE 6 - CREATING SHORTCUT (FIXED)
-:: =========================
+rem =========================
+rem PHASE 6 - CREATING SHORTCUT (FIXED)
+rem =========================
 echo [6/7] Creating desktop shortcut...
 
 set "ICON_PATH=%cd%\assets\bookstack.ico"
@@ -184,9 +230,9 @@ powershell -NoProfile -ExecutionPolicy Bypass -Command "$WshShell = New-Object -
 echo Shortcut created on desktop
 echo.
 
-:: =========================
-:: PHASE 7 - FINAL CHECK
-:: =========================
+rem =========================
+rem PHASE 7 - FINAL CHECK
+rem =========================
 echo [7/7] Final validation...
 
 timeout /t 5 >nul
