@@ -144,6 +144,6 @@ echo ==================================
 echo.
 
 echo Restart containers:
-echo docker compose restart
+docker compose restart
 
 if not defined AUTO_FILE pause
