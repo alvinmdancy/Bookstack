@@ -8,16 +8,16 @@ echo ==================================
 echo.
 
 :: =====================================================
-:: GIT - TAG BASED DEPLOYMENT (SOURCE OF TRUTH)
+:: [0/7] GIT TAG DEPLOYMENT (SOURCE OF TRUTH)
 :: =====================================================
 echo [0/7] Fetching latest release tags...
 
 git fetch --tags >nul 2>&1
 if %errorlevel% neq 0 (
-    echo WARNING: Git fetch failed (continuing with local tags)
+    echo WARNING: Git fetch failed (continuing anyway)
 )
 
-for /f "delims=" %%i in ('git describe --tags --abbrev=0 2^>nul') do set LATEST_TAG=%%i
+for /f "delims=" %%i in ('git describe --tags --abbrev=0 2^>nul') do set "LATEST_TAG=%%i"
 
 if not defined LATEST_TAG (
     echo ERROR: Could not determine latest version tag
@@ -28,6 +28,7 @@ if not defined LATEST_TAG (
 echo Latest version found: !LATEST_TAG!
 
 git checkout !LATEST_TAG! >nul 2>&1
+
 if %errorlevel% neq 0 (
     echo ERROR: Failed to checkout !LATEST_TAG!
     pause
@@ -36,13 +37,13 @@ if %errorlevel% neq 0 (
 
 echo OK Running version !LATEST_TAG!
 
-:: Sync VERSION file
-<nul set /p "=!LATEST_TAG!">"VERSION"
-echo Version file synced
+:: FIXED VERSION WRITE (NO MORE FAILURES)
+echo !LATEST_TAG! > VERSION
+echo OK Version file updated
 echo.
 
 :: =====================================================
-:: DOCKER CHECK
+:: [1/7] DOCKER CHECK
 :: =====================================================
 echo [1/7] Checking Docker...
 
@@ -57,11 +58,12 @@ echo OK Docker running
 echo.
 
 :: =====================================================
-:: START CONTAINERS
+:: [2/7] START CONTAINERS
 :: =====================================================
 echo [2/7] Starting containers...
 
 docker compose up -d >nul 2>&1
+
 if %errorlevel% neq 0 (
     echo ERROR: Failed to start containers
     pause
@@ -72,7 +74,7 @@ echo OK Containers started
 echo.
 
 :: =====================================================
-:: WAIT FOR DATABASE
+:: [3/7] WAIT FOR DATABASE
 :: =====================================================
 echo [3/7] Waiting for MariaDB...
 
@@ -97,9 +99,9 @@ echo OK Database ready
 echo.
 
 :: =====================================================
-:: AUTO BACKUP RESTORE (SINGLE CLEAN FLOW)
+:: [4/7] AUTO BACKUP RESTORE
 :: =====================================================
-echo [4/7] Checking for latest backup...
+echo [4/7] Checking latest backup...
 
 set "BACKUP_DIR=%cd%\backup\backups"
 set "LATEST_BACKUP="
@@ -109,7 +111,7 @@ for /f "delims=" %%F in ('dir /b /o-d "%BACKUP_DIR%\*.zip" 2^>nul') do (
     goto found_backup
 )
 
-echo WARNING: No backups found
+echo WARNING: No backup found
 goto skip_restore
 
 :found_backup
@@ -132,7 +134,7 @@ echo OK Backup restored
 echo.
 
 :: =====================================================
-:: VERIFY CONTAINER
+:: [5/7] VERIFY CONTAINER
 :: =====================================================
 echo [5/7] Verifying BookStack...
 
@@ -147,7 +149,7 @@ echo OK BookStack running
 echo.
 
 :: =====================================================
-:: SHORTCUT CREATION
+:: [6/7] DESKTOP SHORTCUT
 :: =====================================================
 echo [6/7] Creating desktop shortcut...
 
@@ -168,7 +170,7 @@ echo OK Shortcut created
 echo.
 
 :: =====================================================
-:: FINAL HEALTH CHECK
+:: [7/7] FINAL HEALTH CHECK
 :: =====================================================
 echo [7/7] Final validation...
 
