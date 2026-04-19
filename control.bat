@@ -4,35 +4,65 @@ cd /d "%~dp0"
 
 :menu
 cls
-
-set "BASE_DIR=%~dp0"
-set "VERSION_FILE=%BASE_DIR%VERSION"
-
 set "LOCAL_TAG=unknown"
 set "LATEST_TAG=unknown"
 set "UPDATE_AVAILABLE=0"
 
-:: =====================================================
-:: READ LOCAL VERSION (ABSOLUTE PATH FIX)
-:: =====================================================
-if exist "%VERSION_FILE%" (
-    set /p "LOCAL_TAG="<"%VERSION_FILE%"
+:: =========================
+:: Read LOCAL version (SOURCE OF TRUTH)
+:: =========================
+if exist "VERSION" (
+    rem Read the raw content of the VERSION file
+    set /p "LOCAL_TAG_RAW="<"VERSION"
+
+    rem --- Robustly trim leading and trailing whitespace ---
+    rem 1. Trim leading whitespace
+    for /f "tokens=* delims= " %%a in ("!LOCAL_TAG_RAW!") do set "LOCAL_TAG=%%a"
+
+    rem 2. Trim trailing whitespace recursively
+    :trim_trailing
+    if defined LOCAL_TAG (
+        if "!LOCAL_TAG:~-1!"==" " ( 
+            set "LOCAL_TAG=!LOCAL_TAG:~0,-1!"
+            goto :trim_trailing
+        )
+    )
+    
+) else (
+    echo WARNING: VERSION file not found
 )
 
-for /f "tokens=* delims= " %%a in ("!LOCAL_TAG!") do set "LOCAL_TAG=%%a"
+:: =========================
+:: Fetch latest tags
+:: =========================
+git fetch --tags origin >nul 2>&1
 
-:: =====================================================
-:: GET LATEST GIT TAG (SAFE PATH)
-:: =====================================================
-for /f "delims=" %%i in ('git -C "%BASE_DIR%" describe --tags --abbrev=0 2^>nul') do (
+:: Get the latest tag
+for /f "delims=" %%i in ('git tag --sort^=-v:refname 2^>nul') do (
     set "LATEST_TAG=%%i"
+    goto :latest_done
 )
 
+:latest_done
+
+rem Trim whitespace from LATEST_TAG
 for /f "tokens=* delims= " %%a in ("!LATEST_TAG!") do set "LATEST_TAG=%%a"
 
-:: =====================================================
-:: COMPARE VERSIONS
-:: =====================================================
+:: =========================
+:: Compare versions
+:: =========================
+
+echo ================================
+echo     BookStack Control Panel
+echo ================================
+echo.
+echo Go to http://localhost:8085 in your browser to access BookStack
+echo.
+
+echo Current Version: !LOCAL_TAG!
+echo Latest Version : !LATEST_TAG!
+echo.
+
 if not "!LOCAL_TAG!"=="unknown" (
     if not "!LATEST_TAG!"=="unknown" (
         if not "!LOCAL_TAG!"=="!LATEST_TAG!" (
@@ -41,34 +71,22 @@ if not "!LOCAL_TAG!"=="unknown" (
     )
 )
 
-:: =====================================================
-:: UI
-:: =====================================================
-echo ================================
-echo     BookStack Control Panel
-echo ================================
-echo.
-echo Go to http://localhost:8085 in your browser
-echo.
-
-echo Current Version: !LOCAL_TAG!
-echo Latest Version : !LATEST_TAG!
-echo.
-
 if "!UPDATE_AVAILABLE!"=="1" (
+    echo.
     echo *** UPDATE AVAILABLE ***
     echo.
 )
-
 echo ================================
-echo 1. Start
-echo 2. Stop
-echo 3. Update
-echo 4. Restart
-echo 5. Exit
+echo Please select an option:
 echo ================================
 echo.
-set /p choice=Select:
+echo 1. Start BookStack
+echo 2. Stop BookStack
+echo 3. Update BookStack
+echo 4. Restart BookStack
+echo 5. Exit
+echo.
+set /p choice=Select an option: 
 
 if "!choice!"=="1" goto start
 if "!choice!"=="2" goto stop
@@ -78,37 +96,40 @@ if "!choice!"=="5" exit
 
 goto menu
 
-:: =====================================================
-:: START
-:: =====================================================
 :start
-echo Starting BookStack...
+echo ================================
+echo     Starting BookStack....
+echo ================================
+
 docker compose up -d
+echo.
+echo Go to http://localhost:8085 in your browser to access BookStack
+echo.
 pause
+call control.bat
 goto menu
 
-:: =====================================================
-:: STOP
-:: =====================================================
 :stop
-echo Stopping BookStack...
+echo ================================
+echo     Stopping BookStack....
+echo ================================
+
 docker compose down
 pause
+call control.bat
 goto menu
 
-:: =====================================================
-:: UPDATE
-:: =====================================================
 :update
 call update.bat
 goto menu
 
-:: =====================================================
-:: RESTART
-:: =====================================================
 :restart
-echo Restarting BookStack...
+echo ================================
+echo     Restarting BookStack....
+echo ================================
+
 docker compose down
 docker compose up -d
 pause
+call control.bat
 goto menu
