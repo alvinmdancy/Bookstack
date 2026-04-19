@@ -8,44 +8,42 @@ echo ==================================
 echo.
 
 :: =====================================================
-:: [0/7] GIT TAG DEPLOYMENT (SOURCE OF TRUTH)
+:: [0] SYNC FROM GITHUB (CODE + BACKUPS)
 :: =====================================================
-echo [0/7] Fetching latest release tags...
+echo [SYNC] Pulling latest from GitHub...
 
-git fetch --tags >nul 2>&1
+git checkout main >nul 2>&1
+git pull origin main >nul 2>&1
+
 if %errorlevel% neq 0 (
-    echo WARNING: Git fetch failed (continuing anyway)
-)
-
-for /f "delims=" %%i in ('git describe --tags --abbrev=0 2^>nul') do set "LATEST_TAG=%%i"
-
-if not defined LATEST_TAG (
-    echo ERROR: Could not determine latest version tag
+    echo ERROR: Failed to pull from GitHub
     pause
     exit /b 1
 )
 
-echo Latest version found: !LATEST_TAG!
-
-git checkout !LATEST_TAG! >nul 2>&1
-
-if %errorlevel% neq 0 (
-    echo ERROR: Failed to checkout !LATEST_TAG!
-    pause
-    exit /b 1
-)
-
-echo OK Running version !LATEST_TAG!
-
-:: FIXED VERSION WRITE (NO MORE FAILURES)
-echo !LATEST_TAG! > VERSION
-echo OK Version file updated
+echo OK Repo updated from GitHub
 echo.
 
 :: =====================================================
-:: [1/7] DOCKER CHECK
+:: VERSION (DISPLAY ONLY - NO LOGIC DEPENDENCY)
 :: =====================================================
-echo [1/7] Checking Docker...
+echo [VERSION] Reading version...
+
+set "VERSION_FILE=%cd%\VERSION"
+
+if exist "%VERSION_FILE%" (
+    set /p CURRENT_VERSION=<"%VERSION_FILE%"
+) else (
+    set "CURRENT_VERSION=unknown"
+)
+
+echo Current Version: %CURRENT_VERSION%
+echo.
+
+:: =====================================================
+:: [1/6] DOCKER CHECK
+:: =====================================================
+echo [1/6] Checking Docker...
 
 docker info >nul 2>&1
 if %errorlevel% neq 0 (
@@ -58,9 +56,9 @@ echo OK Docker running
 echo.
 
 :: =====================================================
-:: [2/7] START CONTAINERS
+:: [2/6] START CONTAINERS
 :: =====================================================
-echo [2/7] Starting containers...
+echo [2/6] Starting containers...
 
 docker compose up -d >nul 2>&1
 
@@ -70,13 +68,13 @@ if %errorlevel% neq 0 (
     exit /b 1
 )
 
-echo OK Containers started
+echo OK Containers running
 echo.
 
 :: =====================================================
-:: [3/7] WAIT FOR DATABASE
+:: [3/6] WAIT FOR DATABASE
 :: =====================================================
-echo [3/7] Waiting for MariaDB...
+echo [3/6] Waiting for MariaDB...
 
 set /a count=0
 
@@ -87,7 +85,7 @@ docker exec mariadb mysqladmin ping -uroot -prootpass --silent >nul 2>&1
 
 if %errorlevel% neq 0 (
     if !count! GEQ 20 (
-        echo ERROR: MariaDB failed to start
+        echo ERROR: Database not ready
         pause
         exit /b 1
     )
@@ -99,31 +97,36 @@ echo OK Database ready
 echo.
 
 :: =====================================================
-:: [4/7] AUTO BACKUP RESTORE
+:: [4/6] SELECT LATEST BACKUP (LOCAL ONLY)
 :: =====================================================
-echo [4/7] Checking latest backup...
+echo [4/6] Finding latest backup...
 
 set "BACKUP_DIR=%cd%\backup\backups"
 set "LATEST_BACKUP="
+
+if not exist "%BACKUP_DIR%" (
+    echo WARNING: Backup folder not found
+    goto skip_restore
+)
 
 for /f "delims=" %%F in ('dir /b /o-d "%BACKUP_DIR%\*.zip" 2^>nul') do (
     set "LATEST_BACKUP=%BACKUP_DIR%\%%F"
     goto found_backup
 )
 
-echo WARNING: No backup found
+echo WARNING: No backups found
 goto skip_restore
 
 :found_backup
 echo Latest backup detected:
-echo !LATEST_BACKUP!
+echo %LATEST_BACKUP%
 
 echo Restoring backup...
 
-call "%~dp0restore\restore.bat" "!LATEST_BACKUP!"
+call "%~dp0restore\restore.bat" "%LATEST_BACKUP%"
 
 if %errorlevel% neq 0 (
-    echo ERROR: Restore failed
+    echo ERROR: Backup restore failed
     pause
     exit /b 1
 )
@@ -134,13 +137,13 @@ echo OK Backup restored
 echo.
 
 :: =====================================================
-:: [5/7] VERIFY CONTAINER
+:: [5/6] VERIFY CONTAINER
 :: =====================================================
-echo [5/7] Verifying BookStack...
+echo [5/6] Verifying BookStack...
 
 docker ps | findstr bookstack >nul
 if %errorlevel% neq 0 (
-    echo ERROR: BookStack container not running
+    echo ERROR: BookStack not running
     pause
     exit /b 1
 )
@@ -149,34 +152,14 @@ echo OK BookStack running
 echo.
 
 :: =====================================================
-:: [6/7] DESKTOP SHORTCUT
+:: [6/6] FINAL HEALTH CHECK
 :: =====================================================
-echo [6/7] Creating desktop shortcut...
-
-set "ICON_PATH=%cd%\assets\bookstack.ico"
-set "TARGET_PATH=%cd%\control.bat"
-set "SHORTCUT_NAME=BookStack.lnk"
-
-powershell -NoProfile -ExecutionPolicy Bypass ^
-"$WshShell = New-Object -ComObject WScript.Shell; ^
-$Desktop = [Environment]::GetFolderPath('Desktop'); ^
-$Shortcut = $WshShell.CreateShortcut((Join-Path $Desktop '%SHORTCUT_NAME%')); ^
-$Shortcut.TargetPath = '%TARGET_PATH%'; ^
-$Shortcut.WorkingDirectory = '%cd%'; ^
-$Shortcut.IconLocation = '%ICON_PATH%'; ^
-$Shortcut.Save()"
-
-echo OK Shortcut created
-echo.
-
-:: =====================================================
-:: [7/7] FINAL HEALTH CHECK
-:: =====================================================
-echo [7/7] Final validation...
+echo [6/6] Final validation...
 
 timeout /t 5 >nul
 
 curl -s http://localhost:8085 >nul 2>&1
+
 if %errorlevel% neq 0 (
     echo WARNING: Web UI not responding yet
 ) else (
@@ -186,7 +169,7 @@ if %errorlevel% neq 0 (
 echo.
 echo ==================================
 echo UPDATE COMPLETE
-echo Version: !LATEST_TAG!
+echo Version: %CURRENT_VERSION%
 echo ==================================
 echo Access: http://localhost:8085
 echo.
