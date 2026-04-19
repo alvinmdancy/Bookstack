@@ -36,7 +36,7 @@ services:
       PGID: 1000
       TZ: America/New_York
 
-      APP_URL: "http://localhost:8085"
+      APP_URL: "http://100.124.106.115:8085"
       APP_KEY: "base64:eFiW5967/c+ZUVKTXUxuIwbLum5L9aRqN0Jg8pSSo1g="
 
       DB_HOST: mariadb

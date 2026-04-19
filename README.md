@@ -49,7 +49,7 @@ Then open: `http://localhost:8085`
 
 | Field    | Value           |
 |----------|-----------------|
-| Email    | admin@admin.com |
+| Email    | guest@guest |
 | Password | password        |
 
 ### Linux / macOS
