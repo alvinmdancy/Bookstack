@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bookstack
+  namespace: bookstack
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: bookstack
+  template:
+    metadata:
+      labels:
+        app: bookstack
+    spec:
+      containers:
+        - name: bookstack
+          image: lscr.io/linuxserver/bookstack:latest
+          ports:
+            - containerPort: 80
+
+          envFrom:
+            - secretRef:
+                name: bookstack-secret
+
+          env:
+            - name: PUID
+              value: "1000"
+            - name: PGID
+              value: "1000"
+            - name: TZ
+              value: "America/New_York"
+            - name: APP_URL
+              value: "http://127.0.0.1:8086"
+
+            - name: DB_HOST
+              value: mariadb
+            - name: DB_PORT
+              value: "3306"
+
+          volumeMounts:
+            - name: bookstack-config
+              mountPath: /config
+            - name: bookstack-images
+              mountPath: /config/www/uploads/images
+
+      volumes:
+        - name: bookstack-config
+          persistentVolumeClaim:
+            claimName: bookstack-config
+        - name: bookstack-images
+          emptyDir: {}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: bookstack
+  namespace: bookstack
+spec:
+  type: NodePort
+  selector:
+    app: bookstack
+  ports:
+    - port: 80
+      targetPort: 80
+      nodePort: 30086
