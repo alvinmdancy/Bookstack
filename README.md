@@ -1,20 +1,18 @@
 # Portable BookStack Distribution
 
-A fully containerized and portable BookStack deployment with automated installation, database snapshots, and optional versioned assets. Designed to be clone-and-run anywhere with minimal setup.
+A fully containerized BookStack deployment with automated backup, restore, and update tooling. Designed to clone and run anywhere with minimal setup.
 
 ---
 
 ## Features
 
-- One-command installation (Windows + Linux support)
-- Fully Docker-based (no PHP/MySQL installation required)
-- Preloaded database snapshot support
-- Image asset persistence (Git-tracked optional assets)
-- Portable deployment (clone → install → run)
-- Isolated Docker networking between services
+- Docker-based deployment (no PHP/MySQL installation required)
+- Environment-based configuration via `.env` — no hardcoded secrets
 - Automated backup system (keeps latest 3 backups)
-- Easy restore system with interactive selection
-- Version-controlled deployment system (VERSION file + Git tags)
+- Interactive restore with auto mode support
+- Cross-platform management scripts (Windows `.bat` + Linux `.sh`)
+- Version-controlled deployment via `VERSION` file and Git tags
+- Tailscale/LAN-friendly `APP_URL` configuration
 
 ---
 
@@ -26,47 +24,73 @@ A fully containerized and portable BookStack deployment with automated installat
 - Git for Windows
 - Windows 10/11
 
-### Linux / macOS
+### Linux
 
 - Docker + Docker Compose
 - Git
+- `unzip` (`sudo apt install unzip`)
 
 ---
 
 ## Quick Start
 
-### Windows
+### 1. Clone the repo
 
 ```bash
 git clone https://github.com/alvinmdancy/Bookstack.git
 cd Bookstack
-install.bat
 ```
 
-Then open: `http://localhost:8085`
-
-**Default Login**
-
-| Field    | Value           |
-|----------|-----------------|
-| Email    | guest@guest |
-| Password | password        |
-
-### Linux / macOS
+### 2. Create your `.env` file
 
 ```bash
-git clone https://github.com/alvinmdancy/Bookstack.git
-cd Bookstack
-chmod +x install.sh
-./install.sh
+cp .env.example .env
 ```
 
-Or manual start:
+Edit `.env` and set your values:
 
+```env
+APP_URL=http://your-hostname-or-ip:8085
+APP_KEY=base64:generate-this-below
+
+MARIADB_ROOT_PASSWORD=change-me
+MARIADB_DATABASE=bookstackapp
+MARIADB_USER=bookstack
+MARIADB_PASSWORD=change-me
+DB_PASSWORD=change-me
+```
+
+### 3. Generate an APP_KEY
+
+```bash
+docker run --rm lscr.io/linuxserver/bookstack:latest \
+  php /app/www/artisan key:generate --show
+```
+
+Paste the output into `APP_KEY` in your `.env`.
+
+### 4. Start BookStack
+
+**Linux**
 ```bash
 docker compose up -d
-docker exec -i mariadb mysql -uroot -psecretsrootpass bookstackapp < db/bookstack.sql
 ```
+
+**Windows**
+```
+control.bat
+```
+
+Then open `APP_URL` in your browser.
+
+**Default login**
+
+| Field    | Value       |
+|----------|-------------|
+| Email    | admin@admin.com |
+| Password | password    |
+
+Change these immediately after first login.
 
 ---
 
@@ -74,136 +98,144 @@ docker exec -i mariadb mysql -uroot -psecretsrootpass bookstackapp < db/bookstac
 
 ```
 Bookstack/
-└── bookstack-git/
-    ├── assets/
-    │   └── bookstack.ico
-    ├── backup/
-    │   ├── backup.bat
-    │   ├── backup.sh
-    │   └── README.md
-    ├── backups/                    # Runtime backups (gitignored)
-    │   └── YYYYMMDD_HHMMSS.tar.gz
-    ├── bookstack_config/           # BookStack app config (runtime)
-    │   ├── keys/
-    │   ├── log/
-    │   ├── nginx/
-    │   ├── php/
-    │   └── www/
-    ├── bookstack_data/
-    │   └── uploads/
-    ├── db/
-    │   └── bookstack.sql           # Database snapshot
-    ├── mariadb_data/               # MariaDB data directory (runtime)
-    ├── restore/
-    │   ├── restore.bat
-    │   ├── restore.sh
-    │   └── README.md
-    ├── storage/
-    │   ├── files/
-    │   ├── framework/
-    │   ├── images/
-    │   ├── themes/
-    │   └── uploads/
-    ├── control.bat
-    ├── docker-compose.yml
-    ├── install.bat
-    ├── update.bat
-    └── README.md
+├── assets/
+│   └── bookstack.ico
+├── backup/
+│   ├── backup.bat
+│   ├── backup.sh
+│   └── backups/              # Runtime backups (gitignored)
+├── db/
+│   └── bookstack.sql         # Optional database snapshot
+├── restore/
+│   ├── restore.bat
+│   └── restore.sh
+├── storage/
+│   └── images/               # Persisted image uploads
+├── .env                      # Local config (gitignored)
+├── .env.example              # Template — safe to commit
+├── control.bat
+├── control.sh
+├── docker-compose.yml
+├── update.bat
+├── update.sh
+└── VERSION
 ```
+
+---
+
+## Management Scripts
+
+### Control Panel
+
+**Linux**
+```bash
+./control.sh
+```
+
+**Windows**
+```
+control.bat
+```
+
+Both show current vs latest version, flag available updates, and provide a menu to start, stop, restart, or update BookStack.
+
+---
+
+## Backup
+
+**Linux**
+```bash
+bash backup/backup.sh
+```
+
+**Windows**
+```
+cd backup
+backup.bat
+```
+
+Backs up the database and images, compresses to a `.zip`, and keeps the latest 3 backups automatically.
+
+---
+
+## Restore
+
+**Linux**
+```bash
+bash restore/restore.sh
+```
+
+**Windows**
+```
+cd restore
+restore.bat
+```
+
+Both support auto mode by passing a backup path as an argument:
+
+```bash
+bash restore/restore.sh /path/to/backup.zip
+```
+
+---
+
+## Update
+
+**Linux**
+```bash
+bash update.sh
+```
+
+**Windows**
+```
+update.bat
+```
+
+Pulls latest from GitHub, updates the `VERSION` file, waits for the database, restores the latest backup, and validates the app is reachable.
 
 ---
 
 ## Common Commands
 
-**Start services**
 ```bash
+# Start
 docker compose up -d
-```
 
-**Stop services**
-```bash
+# Stop
 docker compose down
-```
 
-**View logs**
-```bash
+# Restart
+docker compose restart bookstack
+
+# Logs
 docker compose logs -f bookstack
 docker compose logs -f mariadb
 ```
 
-**Restart BookStack**
-```bash
-docker compose restart bookstack
-```
+---
+
+## Environment Variables
+
+All secrets live in `.env`. See `.env.example` for the full template.
+
+| Variable                | Default               | Description           |
+|-------------------------|-----------------------|-----------------------|
+| `APP_URL`               | `http://localhost:8085` | Base URL            |
+| `APP_KEY`               | —                     | Laravel encryption key |
+| `MARIADB_ROOT_PASSWORD` | —                     | MariaDB root password |
+| `MARIADB_DATABASE`      | `bookstackapp`        | Database name         |
+| `MARIADB_USER`          | `bookstack`           | Database user         |
+| `MARIADB_PASSWORD`      | —                     | Database user password |
+| `DB_PASSWORD`           | —                     | Same as above (BookStack env) |
+| `TZ`                    | `America/New_York`    | Timezone              |
 
 ---
 
-## Backup System
+## Versioning
 
-### Create a Backup
-
-**Windows**
-```bash
-cd backup
-backup.bat
-```
-
-**Linux / macOS**
-```bash
-cd backup
-./backup.sh
-```
-
-**Backup includes:**
-- Database backup
-- Image backup
-- Compressed archive output
-- Automatically keeps the last 3 backups
-
----
-
-## Restore System
-
-### Restore a Backup
-
-**Windows**
-```bash
-cd restore
-restore.bat
-```
-
-**Linux / macOS**
-```bash
-cd restore
-./restore.sh
-```
-
-**Restore features:**
-- Interactive backup selection
-- Confirmation prompt before overwrite
-- Full database and image restore
-
----
-
-## Updating BookStack
-
-```bash
-docker compose pull bookstack
-docker compose up -d --force-recreate
-docker exec -it bookstack php artisan migrate --force
-```
-
----
-
-## Versioning System
-
-This project uses a structured versioning approach:
-
-- `VERSION` file — tracks the installed version state
-- Git tags — mark available releases
-- Update system — enables controlled upgrades
-
-**Version format:**
+- `VERSION` file tracks the currently installed version
+- Git tags mark releases
+- `control.sh` / `control.bat` compares local vs latest tag and flags updates
 
 | Version | Meaning         |
 |---------|-----------------|
@@ -214,106 +246,38 @@ This project uses a structured versioning approach:
 
 ---
 
-## Security Notes
-
-> **Important:** The default credentials are for local/development use only. Update all of the following before deploying to production.
-
-**Change default database credentials in `docker-compose.yml`:**
-```yaml
-MARIADB_ROOT_PASSWORD: strong-password
-MARIADB_PASSWORD: strong-password
-```
-
-**Generate a new application key:**
-```bash
-docker exec -it bookstack php artisan key:generate --show
-```
-
-**Additional recommendations:**
-- Enable HTTPS via Nginx, Caddy, or Traefik
-- Do not expose database ports publicly
-- Change the default admin password after first login
-- Avoid committing sensitive data to version control
-
----
-
 ## Troubleshooting
+
+**500 error on first start**
+Check that `APP_KEY` is set in `.env` and the container picked it up:
+```bash
+docker exec -it bookstack env | grep APP_KEY
+```
 
 **Images not showing**
 ```bash
-docker exec -it bookstack ls -la /config/www/uploads/images
-
-# Fix permissions
 docker exec -it bookstack chown -R abc:abc /config/www/uploads/images
 ```
 
-**Database issues**
+**Database not ready**
 ```bash
-docker compose ps
 docker compose logs mariadb
 docker compose restart mariadb
 ```
 
 **Port already in use**
-
-Update the port mapping in `docker-compose.yml`:
+Change the port in `docker-compose.yml`:
 ```yaml
 ports:
   - "8086:80"
 ```
+Then update `APP_URL` in `.env` to match.
 
-**Restore failure**
-
-Verify the following:
-- `db/bookstack.sql` exists
-- DB credentials in the restore script match `docker-compose.yml`
-- MariaDB has fully started (wait 10–15 seconds after starting)
-
----
-
-## Cloning to a New Machine
-
+**Artisan commands**
+The linuxserver image puts artisan at `/app/www/artisan`:
 ```bash
-git clone https://github.com/alvinmdancy/Bookstack.git
-cd Bookstack/bookstack-git
-install.bat   # or ./install.sh on Linux/macOS
+docker exec -it bookstack php /app/www/artisan <command>
 ```
-
-The database, images, and configuration will all be restored automatically.
-
----
-
-## Environment Variables
-
-| Variable                | Default             | Description        |
-|-------------------------|---------------------|--------------------|
-| APP_URL                 | http://localhost:8085 | Base URL           |
-| DB_HOST                 | mariadb             | Database host      |
-| DB_DATABASE             | bookstackapp        | Database name      |
-| DB_USERNAME             | bookstack           | Database user      |
-| DB_PASSWORD             | bookstackpass       | Database password  |
-| MARIADB_ROOT_PASSWORD   | secretrootpass      | Root password      |
-| TZ                      | America/New_York    | Timezone           |
-
----
-
-## Use Cases
-
-- Personal knowledge base
-- Team documentation
-- Internal wiki
-- Developer notes system
-- Client documentation portal
-- Educational environments
-
----
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Commit your changes
-4. Submit a pull request
 
 ---
 
