@@ -1,5 +1,4 @@
 #!/bin/bash
-
 set -e
 
 echo "=================================="
@@ -7,58 +6,99 @@ echo "   BookStack Backup Script"
 echo "=================================="
 echo ""
 
-# Configuration - adjusted for running from backup/ directory
-BACKUP_BASE_DIR="../backups"
+# =========================
+# CONFIG (MATCHING YOUR SYSTEM)
+# =========================
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+BASE_DIR="$(dirname "$SCRIPT_DIR")"
+BACKUP_BASE_DIR="$SCRIPT_DIR/backups"
+MAX_BACKUPS=3
+DB_CONTAINER="mariadb"
+DB_NAME="${MARIADB_DATABASE:-bookstackapp}"
+DB_USER="root"
+DB_PASS="${MARIADB_ROOT_PASSWORD:-rootpass}"
+IMAGES_PATH="$BASE_DIR/storage/images"
+
+# =========================
+# TIMESTAMP
+# =========================
 DATE=$(date +"%Y%m%d_%H%M%S")
 BACKUP_DIR="$BACKUP_BASE_DIR/$DATE"
-MAX_BACKUPS=3
 
-# Create backup directory
+# =========================
+# CREATE FOLDERS
+# =========================
+mkdir -p "$BACKUP_BASE_DIR"
 mkdir -p "$BACKUP_DIR"
 
-echo "[1/4] Dumping database..."
-docker exec mariadb mysqldump -uroot -psecretrootpass bookstackapp > "$BACKUP_DIR/bookstack.sql"
-
-if [ $? -eq 0 ]; then
-    echo "✓ Database backup complete"
-else
-    echo "✗ Database backup failed"
+# =========================
+# CHECK CONTAINER
+# =========================
+echo "[1/5] Checking Docker container..."
+if ! docker ps | grep -q "$DB_CONTAINER"; then
+    echo "[ERROR] MariaDB container not found: $DB_CONTAINER"
+    echo "Run: docker ps"
     exit 1
 fi
-
+echo "[OK] Container found"
 echo ""
-echo "[2/4] Backing up images..."
-if [ -d "../storage/images" ]; then
-    cp -r ../storage/images "$BACKUP_DIR/"
-    echo "✓ Images backed up"
-else
-    echo "⚠ No images directory found, skipping"
+
+# =========================
+# DATABASE
+# =========================
+echo "[2/5] Dumping database ($DB_NAME)..."
+docker exec -i "$DB_CONTAINER" mysqldump --protocol=TCP -u"$DB_USER" -p"$DB_PASS" "$DB_NAME" > "$BACKUP_DIR/bookstack.sql"
+if [ $? -ne 0 ]; then
+    echo "[ERROR] Database backup failed"
+    echo ""
+    echo "CHECK:"
+    echo "- DB name: $DB_NAME"
+    echo "- Container: $DB_CONTAINER"
+    rm -rf "$BACKUP_DIR"
+    exit 1
 fi
-
+echo "[OK] Database backup complete"
 echo ""
-echo "[3/4] Compressing backup..."
-tar -czf "$BACKUP_DIR.tar.gz" -C "$BACKUP_BASE_DIR" "$DATE"
+
+# =========================
+# IMAGES
+# =========================
+echo "[3/5] Backing up images..."
+if [ -d "$IMAGES_PATH" ]; then
+    cp -r "$IMAGES_PATH" "$BACKUP_DIR/images"
+    echo "[OK] Images backed up"
+else
+    echo "[WARNING] No images folder found at $IMAGES_PATH"
+fi
+echo ""
+
+# =========================
+# COMPRESS
+# =========================
+echo "[4/5] Compressing backup..."
+cd "$BACKUP_BASE_DIR"
+zip -qr "$DATE.zip" "$DATE/"
 rm -rf "$BACKUP_DIR"
-echo "✓ Backup compressed: $BACKUP_DIR.tar.gz"
-
+echo "[OK] Backup created: $DATE.zip"
 echo ""
-echo "[4/4] Cleaning old backups (keeping latest $MAX_BACKUPS)..."
 
-# Count backups
-BACKUP_COUNT=$(ls -1 "$BACKUP_BASE_DIR"/*.tar.gz 2>/dev/null | wc -l)
-
-if [ "$BACKUP_COUNT" -gt "$MAX_BACKUPS" ]; then
-    # Delete oldest backups, keep only MAX_BACKUPS
-    ls -1t "$BACKUP_BASE_DIR"/*.tar.gz | tail -n +$((MAX_BACKUPS + 1)) | xargs rm -f
-    DELETED=$((BACKUP_COUNT - MAX_BACKUPS))
-    echo "✓ Removed $DELETED old backup(s)"
-else
-    echo "✓ No cleanup needed (total backups: $BACKUP_COUNT)"
-fi
+# =========================
+# CLEANUP OLD BACKUPS
+# =========================
+echo "[5/5] Cleaning old backups..."
+COUNT=0
+while IFS= read -r FILE; do
+    COUNT=$((COUNT + 1))
+    if [ "$COUNT" -gt "$MAX_BACKUPS" ]; then
+        rm -f "$FILE"
+        echo "Deleted old backup: $(basename "$FILE")"
+    fi
+done < <(ls -1t "$BACKUP_BASE_DIR"/*.zip 2>/dev/null)
 
 echo ""
 echo "=================================="
-echo "Backup complete!"
-echo "Location: $BACKUP_DIR.tar.gz"
-echo "Total backups: $(ls -1 "$BACKUP_BASE_DIR"/*.tar.gz 2>/dev/null | wc -l)"
+echo "BACKUP COMPLETE"
+echo "Location: $BACKUP_BASE_DIR"
+echo "Database: $DB_NAME"
+echo "Total backups: $(ls -1 "$BACKUP_BASE_DIR"/*.zip 2>/dev/null | wc -l)"
 echo "=================================="

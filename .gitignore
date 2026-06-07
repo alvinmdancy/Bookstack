@@ -1,9 +1,8 @@
-.env
-data/
 # =========================
 # ENV CONFIG
 # =========================
 .env
+.env.local
 *.env
 
 # =========================
@@ -11,14 +10,32 @@ data/
 # =========================
 bookstack_data/
 mariadb_data/
+data/
 
 # =========================
-# BACKUPS (LOCAL ONLY)
+# BOOKSTACK RUNTIME
 # =========================
-# Ignore runtime snapshots but NOT structure
-snapshots/*.tar.gz
-snapshots/*.sql
+bookstack_config/cache/
+bookstack_config/sessions/
+bookstack_config/views/
+bookstack_config/log/
+bookstack_config/www/storage/logs/
+bookstack_config/www/bootstrap/cache/
+
+# =========================
+# BACKUPS
+# =========================
+backup/backups/
+snapshots/
 *.tar.gz
+*.sql
+*.bak
+
+# =========================
+# RESTORE TEMP
+# =========================
+restore/temp_restore/
+
 # =========================
 # LOGS
 # =========================
@@ -31,42 +48,5 @@ logs/
 .DS_Store
 Thumbs.db
 .vscode/
-
-# =========================
-# TEMP FILES
-# =========================
 tmp/
 temp/
-# Docker runtime data
-mariadb_data/
-
-# OS junk
-.DS_Store
-Thumbs.db
-
-# logs
-*.log
-
-# ignore local runtime cache
-bookstack_config/cache/
-bookstack_config/sessions/
-bookstack_config/views/
-
-# optional backups
-*.bak
-# Backups - do not commit
-*.tar.gz
-
-# Restore temp directory
-restore/temp_restore/
-
-# Database files - too large
-mariadb_data/
-
-# BookStack cache/logs
-bookstack_config/log/
-bookstack_config/www/storage/logs/
-bookstack_config/www/bootstrap/cache/
-
-# Docker
-.env.local
