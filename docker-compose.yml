@@ -1,4 +1,14 @@
 services:
+  gotenberg:
+    image: gotenberg/gotenberg:8
+    container_name: gotenberg
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    command:
+      - "gotenberg"
+      - "--chromium-disable-javascript=false"
+      - "--api-timeout=60s"
   mariadb:
     image: mariadb:10.11
     container_name: mariadb
@@ -36,7 +46,7 @@ services:
       PGID: 1000
       TZ: America/New_York
 
-      APP_URL: "${APP_URL:-http://localhost:8085}"
+      APP_URL: "${APP_URL}"
       APP_KEY: "${APP_KEY}"
 
       DB_HOST: mariadb
